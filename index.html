@@ -2,264 +2,179 @@
 <html lang="bn">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Utkarsh Exam Dashboard</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Utkarsh Exam Portal</title>
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;600;700&display=swap" rel="stylesheet">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
+    
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     
     <style>
-        :root { --primary: #4361ee; --bg: #f0f2f5; --white: #ffffff; --text: #1e293b; }
-        * { box-sizing: border_box; -webkit-tap-highlight-color: transparent; }
+        body { font-family: 'Hind Siliguri', sans-serif; background: #f8f9fa; margin: 0; padding-bottom: 50px; -webkit-tap-highlight-color: transparent; color: #1e293b; }
         
-        body {
-            font-family: 'Hind Siliguri', sans-serif;
-            background-color: var(--bg);
-            margin: 0; padding: 0;
-            color: var(--text);
-            padding-bottom: 50px;
-        }
+        /* Header */
+        header { background: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.05); position: sticky; top: 0; z-index: 100; }
+        .logo-text { font-weight: 700; font-size: 1.3rem; color: #4361ee; }
 
-        /* HEADER */
-        header {
-            background-color: var(--white);
-            padding: 15px 20px;
-            display: flex; justify-content: space-between; align-items: center;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.03);
-            position: sticky; top: 0; z-index: 100;
-        }
-        #app-logo { height: 40px; width: auto; object-fit: contain; }
-        .header-title { font-weight: 700; font-size: 1.2rem; color: var(--primary); }
+        /* Grid Layout */
+        .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; padding: 20px; }
+        .box { background: white; padding: 20px 10px; border-radius: 16px; text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.03); cursor: pointer; aspect-ratio: 1/1; display: flex; flex-direction: column; align-items: center; justify-content: center; border: 1px solid #f0f0f0; transition: transform 0.1s; }
+        .box:active { transform: scale(0.96); background: #eff6ff; }
+        .box img { width: 60px; height: 60px; border-radius: 12px; margin-bottom: 12px; object-fit: cover; border: 1px solid #eee; }
+        .box i { font-size: 3rem; color: #4361ee; margin-bottom: 12px; }
+        .box-title { font-weight: 600; color: #333; font-size: 1rem; }
 
-        /* GRID DASHBOARD LAYOUT */
-        .dashboard-container {
-            padding: 20px;
-            display: grid;
-            grid-template-columns: repeat(2, 1fr); /* Two columns */
-            gap: 15px;
-        }
-
-        .exam-box {
-            background: var(--white);
-            border-radius: 20px;
-            padding: 20px 10px;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            text-align: center;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-            transition: transform 0.2s, box-shadow 0.2s;
-            cursor: pointer;
-            aspect-ratio: 1 / 1;
-            position: relative;
-            overflow: hidden;
-            border: 1px solid rgba(0,0,0,0.05);
-        }
-        .exam-box:active { transform: scale(0.95); background-color: #f8fafc; }
-
-        /* Icon Handling */
-        .box-icon-img { width: 55px; height: 55px; object-fit: contain; margin-bottom: 12px; border-radius: 10px; }
-        .box-icon-font { font-size: 3rem; color: var(--primary); margin-bottom: 12px; }
-        .box-title { font-weight: 600; font-size: 1rem; line-height: 1.3; color: #334155; }
-
-        /* BOTTOM SHEET (POPUP) */
-        .bottom-sheet-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.5);
-            z-index: 998;
-            opacity: 0; visibility: hidden;
-            transition: all 0.3s;
-        }
-        .bottom-sheet-overlay.active { opacity: 1; visibility: visible; }
-
-        .bottom-sheet {
-            position: fixed; bottom: -100%; left: 0; width: 100%;
-            background: var(--white);
-            border-radius: 25px 25px 0 0;
-            padding: 25px 20px 40px 20px;
-            z-index: 999;
-            transition: bottom 0.3s cubic-bezier(0.1, 0.9, 0.2, 1);
-            max-height: 80vh;
-            overflow-y: auto;
-            box-shadow: 0 -5px 30px rgba(0,0,0,0.1);
-        }
-        .bottom-sheet.active { bottom: 0; }
-
-        .sheet-handle { width: 50px; height: 5px; background: #e2e8f0; border-radius: 5px; margin: 0 auto 20px auto; }
-        .sheet-header { display: flex; align-items: center; gap: 15px; margin-bottom: 25px; border-bottom: 1px solid #f1f5f9; padding-bottom: 15px; }
-        .sheet-title { font-size: 1.3rem; font-weight: 700; color: var(--text); }
+        /* Bottom Sheet Popup */
+        .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: none; z-index: 998; backdrop-filter: blur(2px); }
+        .sheet { position: fixed; bottom: -100%; left: 0; width: 100%; background: white; border-radius: 25px 25px 0 0; padding: 20px; box-sizing: border-box; transition: 0.3s cubic-bezier(0.1, 0.9, 0.2, 1); height: 80vh; display: flex; flex-direction: column; z-index: 999; box-shadow: 0 -5px 30px rgba(0,0,0,0.15); }
+        .sheet.active { bottom: 0; }
         
-        .group-label { font-size: 0.85rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; margin: 20px 0 10px 0; letter-spacing: 0.5px; }
-        .sheet-link {
-            display: flex; align-items: center; background: #f8fafc; padding: 15px;
-            border-radius: 12px; margin-bottom: 10px; text-decoration: none; color: var(--text);
-            border: 1px solid #e2e8f0;
-        }
-        .sheet-link:hover { border-color: var(--primary); background: #eff6ff; }
-        .sheet-link i, .sheet-link img { margin-right: 15px; width: 24px; text-align: center; }
+        .sheet-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid #f1f5f9; }
+        .sheet-title { font-size: 1.3rem; font-weight: 700; color: #333; }
+        
+        /* Tabs (Subjects) */
+        .tabs { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 10px; scrollbar-width: none; }
+        .tab { background: #f1f5f9; color: #64748b; padding: 8px 18px; border-radius: 20px; white-space: nowrap; cursor: pointer; font-weight: 600; font-size: 0.9rem; transition: 0.2s; }
+        .tab.active { background: #4361ee; color: white; box-shadow: 0 4px 10px rgba(67, 97, 238, 0.3); }
+        
+        /* List (Chapters) */
+        .list { overflow-y: auto; flex-grow: 1; margin-top: 10px; }
+        .item { display: flex; padding: 15px; background: #fff; margin-bottom: 10px; border-radius: 12px; text-decoration: none; color: #333; align-items: center; border: 1px solid #f1f5f9; box-shadow: 0 2px 5px rgba(0,0,0,0.02); }
+        .item:active { background: #f8fafc; transform: scale(0.99); }
+        .icon-circle { width: 35px; height: 35px; background: #eff6ff; color: #4361ee; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 15px; font-size: 1rem; }
+        
+        .loading { grid-column: span 2; text-align: center; color: #64748b; margin-top: 50px; font-weight: 500; }
     </style>
 </head>
 <body>
 
-    <header>
-        <div style="display:flex; align-items:center; gap:10px;">
-            <img id="app-logo" src="" style="display:none;" alt="Logo">
-            <span class="header-title" id="header-text">Exam Portal</span>
-        </div>
-        <i class="fas fa-sync-alt" onclick="location.reload()" style="color:var(--primary); cursor:pointer; font-size:1.2rem;"></i>
-    </header>
+<header>
+    <span class="logo-text">Exam Portal</span>
+    <i class="fas fa-sync-alt" onclick="location.reload()" style="color:#4361ee; cursor:pointer; font-size:1.2rem;"></i>
+</header>
 
-    <div class="dashboard-container" id="grid-container">
-        <div style="grid-column: span 2; text-align:center; margin-top:50px; color:#64748b;">
-            <i class="fas fa-spinner fa-spin"></i> লোডিং হচ্ছে...
-        </div>
+<div class="grid" id="examGrid">
+    <div class="loading"><i class="fas fa-spinner fa-spin"></i> লোডিং হচ্ছে...</div>
+</div>
+
+<div class="overlay" onclick="closeSheet()"></div>
+<div class="sheet" id="sheet">
+    <div class="sheet-header">
+        <span class="sheet-title" id="sheetTitle">Exam</span>
+        <i class="fas fa-times" onclick="closeSheet()" style="font-size:1.5rem; color:#94a3b8; cursor:pointer; padding: 5px;"></i>
     </div>
+    <div class="tabs" id="tabContainer"></div>
+    <div class="list" id="listContainer"></div>
+</div>
 
-    <div class="bottom-sheet-overlay" onclick="closeSheet()"></div>
-    <div class="bottom-sheet" id="mySheet">
-        <div class="sheet-handle"></div>
-        <div class="sheet-header"></div>
-        <div id="sheet-content"></div>
-    </div>
+<script>
+    // ============================================
+    //  আপনার দেওয়া কনফিগারেশন বসানো হয়েছে
+    // ============================================
+    const firebaseConfig = {
+        apiKey: "AIzaSyDwGzTPmFg-gjoYtNWNJM47p22NfBugYFA",
+        authDomain: "mock-test-1eea6.firebaseapp.com",
+        databaseURL: "https://mock-test-1eea6-default-rtdb.firebaseio.com",
+        projectId: "mock-test-1eea6",
+        storageBucket: "mock-test-1eea6.firebaseapp.com",
+        messagingSenderId: "111849173136",
+        appId: "1:111849173136:web:8b211f58d854119e88a815",
+        measurementId: "G-5RLWPTP8YD"
+    };
 
-    <script>
-        // ===============================================
-        //  STEP: আপনার দেওয়া লিঙ্কটি এখানে বসানো হয়েছে
-        // ===============================================
+    // Initialize Firebase
+    if (!firebase.apps.length) {
+        firebase.initializeApp(firebaseConfig);
+    }
+    const db = firebase.database();
+    let allData = [];
+
+    // Load Data
+    db.ref('exams').on('value', (snapshot) => {
+        const data = snapshot.val();
+        const grid = document.getElementById('examGrid');
+        grid.innerHTML = "";
         
-        const sheetURL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQc0QxNTVZLCx6SRmRdXsJe9LUqG6O0hsEjlyulxpJC2EH1WNYNyLTR_FL9LVuiooPVYrO4nj4LJKTa/pub?gid=0&single=true&output=csv";
-
-        // ===============================================
-
-        let allExamsData = {}; 
-
-        function init() {
-            Papa.parse(sheetURL, {
-                download: true, header: true,
-                complete: function(results) { processData(results.data); },
-                error: function() { 
-                    document.getElementById('grid-container').innerHTML = 
-                    '<p style="grid-column:span 2; text-align:center; color:red;">ডেটা লোড করা যায়নি। ইন্টারনেট কানেকশন চেক করুন।</p>'; 
-                }
-            });
+        if(!data) { 
+            grid.innerHTML = '<div class="loading">কোনো ডেটা পাওয়া যায়নি।</div>'; 
+            return; 
         }
 
-        function processData(data) {
-            // Check for empty data
-            if (!data || data.length === 0) {
-                 document.getElementById('grid-container').innerHTML = '<p style="text-align:center; grid-column:span 2;">শিটটি খালি মনে হচ্ছে। দয়া করে শিটে কিছু ডেটা লিখুন।</p>';
-                 return;
-            }
+        allData = Object.values(data);
+        
+        // Find Unique Exams
+        const uniqueExams = [...new Set(allData.map(item => item.category))];
 
-            // Logo Processing
-            if (data.length > 0 && data[0]['App Logo']) {
-                const logo = data[0]['App Logo'].trim();
-                if(logo) {
-                    document.getElementById('app-logo').src = logo;
-                    document.getElementById('app-logo').style.display = 'block';
-                    document.getElementById('header-text').style.display = 'none';
-                }
-            }
-
-            let exams = {};
-            let hasData = false;
-
-            data.forEach(row => {
-                if(!row['Exam Category']) return;
-                hasData = true;
-                let cat = row['Exam Category'].trim();
-                let sub = row['Sub Category'] ? row['Sub Category'].trim() : 'General';
-                let iconCode = row['Icon Code'] ? row['Icon Code'].trim() : 'fa-graduation-cap';
-
-                if (!exams[cat]) exams[cat] = { name: cat, icon: iconCode, subs: {} };
-                if (!exams[cat].subs[sub]) exams[cat].subs[sub] = [];
-
-                exams[cat].subs[sub].push({
-                    name: row['Subject Name'],
-                    url: row['Link'],
-                    icon: iconCode 
-                });
-            });
-
-            if (!hasData) {
-                document.getElementById('grid-container').innerHTML = '<p style="text-align:center; grid-column:span 2;">সঠিক ডেটা পাওয়া যায়নি। গুগল শিটের কলামের নামগুলো চেক করুন।</p>';
-                return;
-            }
-
-            allExamsData = exams;
-            renderGrid(exams);
-        }
-
-        function getIconHTML(iconString, isBig = false) {
-            if(iconString && iconString.startsWith('http')) {
-                return `<img src="${iconString}" class="${isBig ? 'box-icon-img' : ''}" style="${!isBig ? 'width:24px; height:24px; border-radius:4px; object-fit:cover;' : ''}">`;
-            } else {
-                const iconClass = iconString || 'fa-graduation-cap';
-                return `<i class="fas ${iconClass} ${isBig ? 'box-icon-font' : ''}" style="${!isBig ? 'color:#4361ee; font-size:1.2rem;' : ''}"></i>`;
-            }
-        }
-
-        function renderGrid(exams) {
-            const container = document.getElementById('grid-container');
-            let html = '';
-            for (const key in exams) {
-                const exam = exams[key];
-                const iconHTML = getIconHTML(exam.icon, true);
-                
-                html += `
-                    <div class="exam-box" onclick="openSheet('${key}')">
-                        ${iconHTML}
-                        <div class="box-title">${exam.name}</div>
-                    </div>
-                `;
-            }
-            container.innerHTML = html;
-        }
-
-        function openSheet(examKey) {
-            const exam = allExamsData[examKey];
-            const sheet = document.getElementById('mySheet');
-            const overlay = document.querySelector('.bottom-sheet-overlay');
-            const contentDiv = document.getElementById('sheet-content');
-            const headerDiv = document.querySelector('.sheet-header');
-
-            const headerIcon = (exam.icon && exam.icon.startsWith('http')) ? 
-                `<img src="${exam.icon}" style="width:50px; height:50px; border-radius:10px; object-fit:cover;">` : 
-                `<i class="fas ${exam.icon || 'fa-graduation-cap'}" style="font-size:2rem; color:#4361ee;"></i>`;
+        uniqueExams.forEach(cat => {
+            const item = allData.find(d => d.category === cat);
             
-            headerDiv.innerHTML = `
-                ${headerIcon}
-                <div class="sheet-title">${exam.name}</div>
-                <i class="fas fa-times" onclick="closeSheet()" style="margin-left:auto; font-size:1.5rem; color:#94a3b8; padding:5px; cursor:pointer;"></i>
-            `;
-
-            let html = '';
-            for (const subKey in exam.subs) {
-                html += `<div class="group-label">${subKey}</div>`;
-                exam.subs[subKey].forEach(link => {
-                    const linkIcon = getIconHTML(link.icon, false);
-                    html += `
-                        <a href="${link.url}" class="sheet-link">
-                            ${linkIcon}
-                            <span style="flex-grow:1; font-weight:500;">${link.name}</span>
-                            <i class="fas fa-chevron-right" style="font-size:0.8rem; color:#cbd5e1; margin:0;"></i>
-                        </a>
-                    `;
-                });
+            // Check Icon Type (Image or FontAwesome)
+            let iconHtml = `<img src="${item.icon}">`;
+            if(!item.icon.startsWith('data:image') && !item.icon.startsWith('http')) {
+                iconHtml = `<i class="${item.icon || 'fas fa-graduation-cap'}"></i>`;
             }
-            contentDiv.innerHTML = html;
 
-            overlay.classList.add('active');
-            sheet.classList.add('active');
-            document.body.style.overflow = 'hidden'; 
+            grid.innerHTML += `
+                <div class="box" onclick="openSheet('${cat}')">
+                    ${iconHtml}
+                    <div class="box-title">${cat}</div>
+                </div>
+            `;
+        });
+    });
+
+    // Open Sheet & Tabs
+    window.openSheet = function(category) {
+        document.getElementById('sheetTitle').innerText = category;
+        const filtered = allData.filter(d => d.category === category);
+        
+        const subjects = [...new Set(filtered.map(d => d.subject))];
+        const tabCont = document.getElementById('tabContainer');
+        tabCont.innerHTML = "";
+        
+        subjects.forEach((sub, idx) => {
+            tabCont.innerHTML += `<div class="tab ${idx===0?'active':''}" onclick="filterList('${category}', '${sub}', this)">${sub}</div>`;
+        });
+
+        if(subjects.length > 0) {
+            filterList(category, subjects[0], document.querySelector('.tab'));
+        } else {
+            document.getElementById('listContainer').innerHTML = "<p style='text-align:center; color:#999; margin-top:20px;'>কোনো কনটেন্ট নেই।</p>";
         }
+        
+        document.querySelector('.overlay').style.display = 'block';
+        document.getElementById('sheet').classList.add('active');
+    }
 
-        function closeSheet() {
-            document.getElementById('mySheet').classList.remove('active');
-            document.querySelector('.bottom-sheet-overlay').classList.remove('active');
-            document.body.style.overflow = 'auto';
+    // Filter List
+    window.filterList = function(cat, sub, el) {
+        if(el) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            el.classList.add('active');
         }
+        
+        const list = document.getElementById('listContainer');
+        list.innerHTML = "";
+        
+        const items = allData.filter(d => d.category === cat && d.subject === sub);
+        items.forEach(item => {
+            list.innerHTML += `
+                <a href="${item.link}" class="item">
+                    <div class="icon-circle"><i class="fas fa-play"></i></div>
+                    <div style="flex-grow:1; font-weight:600; font-size:0.95rem;">${item.chapter}</div>
+                    <i class="fas fa-chevron-right" style="color:#cbd5e1;"></i>
+                </a>
+            `;
+        });
+    }
 
-        init();
-    </script>
+    window.closeSheet = function() {
+        document.querySelector('.overlay').style.display = 'none';
+        document.getElementById('sheet').classList.remove('active');
+    }
+</script>
+
 </body>
 </html>
