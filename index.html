@@ -49,33 +49,17 @@
             box-shadow: 0 4px 15px rgba(0,0,0,0.05);
             transition: transform 0.2s, box-shadow 0.2s;
             cursor: pointer;
-            aspect-ratio: 1 / 1; /* Square Shape */
+            aspect-ratio: 1 / 1;
             position: relative;
             overflow: hidden;
             border: 1px solid rgba(0,0,0,0.05);
         }
-
         .exam-box:active { transform: scale(0.95); background-color: #f8fafc; }
 
         /* Icon Handling */
-        .box-icon-img {
-            width: 55px; height: 55px;
-            object-fit: contain;
-            margin-bottom: 12px;
-            border-radius: 10px;
-        }
-        .box-icon-font {
-            font-size: 3rem;
-            color: var(--primary);
-            margin-bottom: 12px;
-        }
-
-        .box-title {
-            font-weight: 600;
-            font-size: 1rem;
-            line-height: 1.3;
-            color: #334155;
-        }
+        .box-icon-img { width: 55px; height: 55px; object-fit: contain; margin-bottom: 12px; border-radius: 10px; }
+        .box-icon-font { font-size: 3rem; color: var(--primary); margin-bottom: 12px; }
+        .box-title { font-weight: 600; font-size: 1rem; line-height: 1.3; color: #334155; }
 
         /* BOTTOM SHEET (POPUP) */
         .bottom-sheet-overlay {
@@ -100,32 +84,18 @@
         }
         .bottom-sheet.active { bottom: 0; }
 
-        .sheet-handle {
-            width: 50px; height: 5px; background: #e2e8f0;
-            border-radius: 5px; margin: 0 auto 20px auto;
-        }
-
-        .sheet-header {
-            display: flex; align-items: center; gap: 15px; margin-bottom: 25px;
-            border-bottom: 1px solid #f1f5f9; padding-bottom: 15px;
-        }
+        .sheet-handle { width: 50px; height: 5px; background: #e2e8f0; border-radius: 5px; margin: 0 auto 20px auto; }
+        .sheet-header { display: flex; align-items: center; gap: 15px; margin-bottom: 25px; border-bottom: 1px solid #f1f5f9; padding-bottom: 15px; }
         .sheet-title { font-size: 1.3rem; font-weight: 700; color: var(--text); }
         
-        /* Links inside Sheet */
-        .group-label {
-            font-size: 0.85rem; font-weight: 700; color: #94a3b8;
-            text-transform: uppercase; margin: 20px 0 10px 0; letter-spacing: 0.5px;
-        }
+        .group-label { font-size: 0.85rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; margin: 20px 0 10px 0; letter-spacing: 0.5px; }
         .sheet-link {
-            display: flex; align-items: center;
-            background: #f8fafc; padding: 15px;
-            border-radius: 12px; margin-bottom: 10px;
-            text-decoration: none; color: var(--text);
+            display: flex; align-items: center; background: #f8fafc; padding: 15px;
+            border-radius: 12px; margin-bottom: 10px; text-decoration: none; color: var(--text);
             border: 1px solid #e2e8f0;
         }
         .sheet-link:hover { border-color: var(--primary); background: #eff6ff; }
         .sheet-link i, .sheet-link img { margin-right: 15px; width: 24px; text-align: center; }
-
     </style>
 </head>
 <body>
@@ -147,17 +117,16 @@
     <div class="bottom-sheet-overlay" onclick="closeSheet()"></div>
     <div class="bottom-sheet" id="mySheet">
         <div class="sheet-handle"></div>
-        <div class="sheet-header">
-            </div>
+        <div class="sheet-header"></div>
         <div id="sheet-content"></div>
     </div>
 
     <script>
         // ===============================================
-        //  APNAR LINK ADD KORA HOYECHE (DO NOT CHANGE)
+        //  নতুন সঠিক লিঙ্ক বসানো হয়েছে
         // ===============================================
         
-        const sheetURL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTWzcWKgTMaktn76OKCBibsjSutkXHHk8J23GvHEJiMUnGrtVGiTZJHX8KI8NhVhrpCzjgUP_QzpgNO/pub?gid=0&single=true&output=csv"; 
+        const sheetURL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQcOQxNTVZLCx6SRmRdXsJe9LUqG6OOhsEjIyulxpJC2EH1WNYNyLTR_FL9LVuiooPVYrO4nj4LJKTa/pub?gid=0&single=true&output=csv";
 
         // ===============================================
 
@@ -175,7 +144,6 @@
         }
 
         function processData(data) {
-            // 1. Set App Logo (From Column F)
             if (data.length > 0 && data[0]['App Logo']) {
                 const logo = data[0]['App Logo'].trim();
                 if(logo) {
@@ -185,7 +153,6 @@
                 }
             }
 
-            // 2. Process Exam Categories
             let exams = {};
             data.forEach(row => {
                 if(!row['Exam Category']) return;
@@ -207,13 +174,10 @@
             renderGrid(exams);
         }
 
-        // Helper: Check if icon is Image URL or FontAwesome Code
         function getIconHTML(iconString, isBig = false) {
             if(iconString.startsWith('http')) {
-                // It is an Image
                 return `<img src="${iconString}" class="${isBig ? 'box-icon-img' : ''}" style="${!isBig ? 'width:24px; height:24px; border-radius:4px; object-fit:cover;' : ''}">`;
             } else {
-                // It is a FontAwesome Icon
                 return `<i class="fas ${iconString} ${isBig ? 'box-icon-font' : ''}" style="${!isBig ? 'color:#4361ee; font-size:1.2rem;' : ''}"></i>`;
             }
         }
@@ -240,7 +204,6 @@
             container.innerHTML = html;
         }
 
-        // --- Popup Logic ---
         function openSheet(examKey) {
             const exam = allExamsData[examKey];
             const sheet = document.getElementById('mySheet');
@@ -248,7 +211,6 @@
             const contentDiv = document.getElementById('sheet-content');
             const headerDiv = document.querySelector('.sheet-header');
 
-            // Set Header in Popup
             const headerIcon = exam.icon.startsWith('http') ? 
                 `<img src="${exam.icon}" style="width:50px; height:50px; border-radius:10px; object-fit:cover;">` : 
                 `<i class="fas ${exam.icon}" style="font-size:2rem; color:#4361ee;"></i>`;
@@ -259,13 +221,11 @@
                 <i class="fas fa-times" onclick="closeSheet()" style="margin-left:auto; font-size:1.5rem; color:#94a3b8; padding:5px; cursor:pointer;"></i>
             `;
 
-            // Set Links in Popup
             let html = '';
             for (const subKey in exam.subs) {
                 html += `<div class="group-label">${subKey}</div>`;
                 exam.subs[subKey].forEach(link => {
                     const linkIcon = getIconHTML(link.icon, false);
-
                     html += `
                         <a href="${link.url}" class="sheet-link">
                             ${linkIcon}
@@ -277,7 +237,6 @@
             }
             contentDiv.innerHTML = html;
 
-            // Show Sheet
             overlay.classList.add('active');
             sheet.classList.add('active');
             document.body.style.overflow = 'hidden'; 
