@@ -123,10 +123,10 @@
 
     <script>
         // ===============================================
-        //  নতুন সঠিক লিঙ্ক বসানো হয়েছে
+        //  STEP: আপনার দেওয়া লিঙ্কটি এখানে বসানো হয়েছে
         // ===============================================
         
-        const sheetURL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQcOQxNTVZLCx6SRmRdXsJe9LUqG6OOhsEjIyulxpJC2EH1WNYNyLTR_FL9LVuiooPVYrO4nj4LJKTa/pub?gid=0&single=true&output=csv";
+        const sheetURL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQc0QxNTVZLCx6SRmRdXsJe9LUqG6O0hsEjlyulxpJC2EH1WNYNyLTR_FL9LVuiooPVYrO4nj4LJKTa/pub?gid=0&single=true&output=csv";
 
         // ===============================================
 
@@ -144,6 +144,13 @@
         }
 
         function processData(data) {
+            // Check for empty data
+            if (!data || data.length === 0) {
+                 document.getElementById('grid-container').innerHTML = '<p style="text-align:center; grid-column:span 2;">শিটটি খালি মনে হচ্ছে। দয়া করে শিটে কিছু ডেটা লিখুন।</p>';
+                 return;
+            }
+
+            // Logo Processing
             if (data.length > 0 && data[0]['App Logo']) {
                 const logo = data[0]['App Logo'].trim();
                 if(logo) {
@@ -154,8 +161,11 @@
             }
 
             let exams = {};
+            let hasData = false;
+
             data.forEach(row => {
                 if(!row['Exam Category']) return;
+                hasData = true;
                 let cat = row['Exam Category'].trim();
                 let sub = row['Sub Category'] ? row['Sub Category'].trim() : 'General';
                 let iconCode = row['Icon Code'] ? row['Icon Code'].trim() : 'fa-graduation-cap';
@@ -170,25 +180,26 @@
                 });
             });
 
+            if (!hasData) {
+                document.getElementById('grid-container').innerHTML = '<p style="text-align:center; grid-column:span 2;">সঠিক ডেটা পাওয়া যায়নি। গুগল শিটের কলামের নামগুলো চেক করুন।</p>';
+                return;
+            }
+
             allExamsData = exams;
             renderGrid(exams);
         }
 
         function getIconHTML(iconString, isBig = false) {
-            if(iconString.startsWith('http')) {
+            if(iconString && iconString.startsWith('http')) {
                 return `<img src="${iconString}" class="${isBig ? 'box-icon-img' : ''}" style="${!isBig ? 'width:24px; height:24px; border-radius:4px; object-fit:cover;' : ''}">`;
             } else {
-                return `<i class="fas ${iconString} ${isBig ? 'box-icon-font' : ''}" style="${!isBig ? 'color:#4361ee; font-size:1.2rem;' : ''}"></i>`;
+                const iconClass = iconString || 'fa-graduation-cap';
+                return `<i class="fas ${iconClass} ${isBig ? 'box-icon-font' : ''}" style="${!isBig ? 'color:#4361ee; font-size:1.2rem;' : ''}"></i>`;
             }
         }
 
         function renderGrid(exams) {
             const container = document.getElementById('grid-container');
-            if(Object.keys(exams).length === 0) {
-                container.innerHTML = '<p style="text-align:center; grid-column:span 2; margin-top:20px;">কোনো ডেটা পাওয়া যায়নি। গুগল শিট চেক করুন।</p>';
-                return;
-            }
-
             let html = '';
             for (const key in exams) {
                 const exam = exams[key];
@@ -211,9 +222,9 @@
             const contentDiv = document.getElementById('sheet-content');
             const headerDiv = document.querySelector('.sheet-header');
 
-            const headerIcon = exam.icon.startsWith('http') ? 
+            const headerIcon = (exam.icon && exam.icon.startsWith('http')) ? 
                 `<img src="${exam.icon}" style="width:50px; height:50px; border-radius:10px; object-fit:cover;">` : 
-                `<i class="fas ${exam.icon}" style="font-size:2rem; color:#4361ee;"></i>`;
+                `<i class="fas ${exam.icon || 'fa-graduation-cap'}" style="font-size:2rem; color:#4361ee;"></i>`;
             
             headerDiv.innerHTML = `
                 ${headerIcon}
