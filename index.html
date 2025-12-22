@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Utkarsh Exam Portal</title>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;600&display=swap" rel="stylesheet">
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
+    
+    <style>
+        :root { --primary: #2563eb; --bg: #f3f4f6; --white: #ffffff; --text: #1f2937; }
+        * { box-sizing: border_box; -webkit-tap-highlight-color: transparent; }
+        body { font-family: 'Hind Siliguri', sans-serif; background-color: var(--bg); margin: 0; padding: 0; color: var(--text); padding-bottom: 30px; }
+
+        header {
+            background-color: var(--white); padding: 10px 15px; position: sticky; top: 0; z-index: 100;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center;
+        }
+        
+        /* Dynamic Logo Style */
+        #dynamic-logo { height: 45px; width: auto; object-fit: contain; }
+
+        .refresh-btn { background: none; border: none; color: var(--primary); font-size: 1.2rem; cursor: pointer; }
+        .container { padding: 15px; max-width: 600px; margin: 0 auto; }
+
+        .exam-card { background: var(--white); border-radius: 12px; margin-bottom: 15px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); overflow: hidden; }
+        .exam-header { padding: 15px; display: flex; align-items: center; justify-content: space-between; }
+        .header-left { display: flex; align-items: center; gap: 15px; }
+        
+        .icon-box { width: 45px; height: 45px; background: #eff6ff; border-radius: 10px; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+        .custom-img-icon { width: 100%; height: 100%; object-fit: cover; }
+        .fa-icon { color: var(--primary); font-size: 1.4rem; }
+        
+        .exam-title { font-weight: 600; font-size: 1.1rem; }
+        
+        .sub-content { display: none; background: #f9fafb; padding: 0 15px 15px 15px; border-top: 1px solid #f3f4f6; }
+        .active-card .sub-content { display: block; }
+        .active-card .fa-chevron-down { transform: rotate(180deg); }
+        .sub-group-title { font-size: 0.9rem; color: #6b7280; margin: 15px 0 8px 0; font-weight: 600; }
+        
+        .link-item { display: flex; align-items: center; background: var(--white); padding: 12px; border-radius: 8px; text-decoration: none; color: var(--text); margin-bottom: 8px; border: 1px solid #e5e7eb; }
+        .small-icon { width: 24px; height: 24px; margin-right: 12px; object-fit: contain; }
+        .link-text { flex-grow: 1; font-size: 0.95rem; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <img id="dynamic-logo" src="https://via.placeholder.com/150x50?text=Exam+Portal" alt="App Logo">
+        
+        <button class="refresh-btn" onclick="location.reload()">
+            <i class="fas fa-sync-alt"></i>
+        </button>
+    </header>
+
+    <div class="container" id="app">
+        <div style="text-align:center; margin-top:50px; color:#666;">
+            <i class="fas fa-spinner fa-spin"></i> ডেটা লোড হচ্ছে...
+        </div>
+    </div>
+
+    <script>
+        // ===============================================
+        //  APNAR GOOGLE SHEET LINK ADD KORA HOYECHE
+        // ===============================================
+        
+        const sheetURL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTwjsmVKLB5ILDHsrMBrTsACQUZuy3JnugXPyfaig6tUoZci6QZ2APu8I8WYM1sFity9sE9t-UtlBWt/pub?output=csv"; 
+
+        // ===============================================
+
+        function init() {
+            Papa.parse(sheetURL, {
+                download: true, header: true,
+                complete: function(results) { processAndRender(results.data); },
+                error: function() { document.getElementById('app').innerHTML = '<p style="color:red;text-align:center;">ডেটা লোড করা যায়নি। ইন্টারনেট চেক করুন।</p>'; }
+            });
+        }
+
+        function processAndRender(data) {
+            // 1. Set Logo from Column F (App Logo)
+            if (data.length > 0 && data[0]['App Logo']) {
+                const logoLink = data[0]['App Logo'].trim();
+                if (logoLink !== "") {
+                    document.getElementById('dynamic-logo').src = logoLink;
+                }
+            }
+
+            // 2. Process Exam Data
+            let exams = {};
+            data.forEach(row => {
+                if(!row['Exam Category']) return;
+                let cat = row['Exam Category'].trim();
+                let sub = row['Sub Category'] ? row['Sub Category'].trim() : 'General';
+                let iconCode = row['Icon Code'] ? row['Icon Code'].trim() : 'fa-folder';
+
+                if (!exams[cat]) exams[cat] = { name: cat, mainIcon: iconCode, subs: {} };
+                if (!exams[cat].subs[sub]) exams[cat].subs[sub] = [];
+
+                exams[cat].subs[sub].push({
+                    name: row['Subject Name'],
+                    url: row['Link'],
+                    icon: iconCode
+                });
+            });
+            renderHTML(exams);
+        }
+
+        function getIconHTML(iconString, isSmall = false) {
+            if(iconString.startsWith('http')) {
+                return `<img src="${iconString}" class="${isSmall ? 'small-icon' : 'custom-img-icon'}">`;
+            } else {
+                return `<i class="fas ${iconString} ${isSmall ? '' : 'fa-icon'}" ${isSmall ? 'style="margin-right:12px;"' : ''}></i>`;
+            }
+        }
+
+        function renderHTML(exams) {
+            const container = document.getElementById('app');
+            if(Object.keys(exams).length === 0) {
+                container.innerHTML = '<p style="text-align:center; margin-top:30px;">কোনো ডেটা পাওয়া যায়নি। গুগল শিট চেক করুন।</p>';
+                return;
+            }
+
+            let html = '';
+            for (const key in exams) {
+                const exam = exams[key];
+                let subHtml = '';
+                let headerIcon = getIconHTML(exam.mainIcon);
+
+                for (const subKey in exam.subs) {
+                    let linksHtml = '';
+                    exam.subs[subKey].forEach(link => {
+                        let linkIcon = getIconHTML(link.icon, true);
+                        linksHtml += `
+                            <a href="${link.url}" class="link-item">
+                                ${linkIcon}
+                                <span class="link-text">${link.name}</span>
+                                <i class="fas fa-chevron-right" style="font-size:0.8rem; color:#d1d5db;"></i>
+                            </a>`;
+                    });
+                    subHtml += `<div class="sub-group-title">${subKey}</div>${linksHtml}`;
+                }
+
+                html += `
+                    <div class="exam-card">
+                        <div class="exam-header" onclick="this.parentElement.classList.toggle('active-card')">
+                            <div class="header-left">
+                                <div class="icon-box">${headerIcon}</div>
+                                <span class="exam-title">${exam.name}</span>
+                            </div>
+                            <i class="fas fa-chevron-down" style="color:#9ca3af; transition:0.3s;"></i>
+                        </div>
+                        <div class="sub-content">${subHtml}</div>
+                    </div>`;
+            }
+            container.innerHTML = html;
+        }
+        init();
+    </script>
+</body>
+</html>
