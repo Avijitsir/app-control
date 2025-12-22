@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Exam Dashboard</title>
+    <title>Utkarsh Exam Dashboard</title>
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;600;700&display=swap" rel="stylesheet">
@@ -49,18 +49,20 @@
             box-shadow: 0 4px 15px rgba(0,0,0,0.05);
             transition: transform 0.2s, box-shadow 0.2s;
             cursor: pointer;
-            aspect-ratio: 1 / 1; /* Makes it perfectly square */
+            aspect-ratio: 1 / 1; /* Square Shape */
             position: relative;
             overflow: hidden;
+            border: 1px solid rgba(0,0,0,0.05);
         }
 
-        .exam-box:active { transform: scale(0.95); }
+        .exam-box:active { transform: scale(0.95); background-color: #f8fafc; }
 
-        /* Exam Icon in Box */
+        /* Icon Handling */
         .box-icon-img {
-            width: 50px; height: 50px;
+            width: 55px; height: 55px;
             object-fit: contain;
             margin-bottom: 12px;
+            border-radius: 10px;
         }
         .box-icon-font {
             font-size: 3rem;
@@ -98,7 +100,6 @@
         }
         .bottom-sheet.active { bottom: 0; }
 
-        /* Sheet Handle */
         .sheet-handle {
             width: 50px; height: 5px; background: #e2e8f0;
             border-radius: 5px; margin: 0 auto 20px auto;
@@ -123,7 +124,7 @@
             border: 1px solid #e2e8f0;
         }
         .sheet-link:hover { border-color: var(--primary); background: #eff6ff; }
-        .sheet-link i { margin-right: 15px; color: var(--primary); font-size: 1.1rem; width: 20px; text-align: center; }
+        .sheet-link i, .sheet-link img { margin-right: 15px; width: 24px; text-align: center; }
 
     </style>
 </head>
@@ -134,7 +135,7 @@
             <img id="app-logo" src="" style="display:none;" alt="Logo">
             <span class="header-title" id="header-text">Exam Portal</span>
         </div>
-        <i class="fas fa-sync-alt" onclick="location.reload()" style="color:var(--primary); cursor:pointer;"></i>
+        <i class="fas fa-sync-alt" onclick="location.reload()" style="color:var(--primary); cursor:pointer; font-size:1.2rem;"></i>
     </header>
 
     <div class="dashboard-container" id="grid-container">
@@ -153,25 +154,28 @@
 
     <script>
         // ===============================================
-        //  STEP: আপনার নতুন Google Sheet লিঙ্ক নিচে বসান
+        //  APNAR LINK ADD KORA HOYECHE (DO NOT CHANGE)
         // ===============================================
         
         const sheetURL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTWzcWKgTMaktn76OKCBibsjSutkXHHk8J23GvHEJiMUnGrtVGiTZJHX8KI8NhVhrpCzjgUP_QzpgNO/pub?gid=0&single=true&output=csv"; 
 
         // ===============================================
 
-        let allExamsData = {}; // To store data for popup
+        let allExamsData = {}; 
 
         function init() {
             Papa.parse(sheetURL, {
                 download: true, header: true,
                 complete: function(results) { processData(results.data); },
-                error: function() { document.getElementById('grid-container').innerHTML = '<p>Connection Error!</p>'; }
+                error: function() { 
+                    document.getElementById('grid-container').innerHTML = 
+                    '<p style="grid-column:span 2; text-align:center; color:red;">ডেটা লোড করা যায়নি। ইন্টারনেট কানেকশন চেক করুন।</p>'; 
+                }
             });
         }
 
         function processData(data) {
-            // Logo Handling
+            // 1. Set App Logo (From Column F)
             if (data.length > 0 && data[0]['App Logo']) {
                 const logo = data[0]['App Logo'].trim();
                 if(logo) {
@@ -181,7 +185,7 @@
                 }
             }
 
-            // Grouping Logic
+            // 2. Process Exam Categories
             let exams = {};
             data.forEach(row => {
                 if(!row['Exam Category']) return;
@@ -195,26 +199,29 @@
                 exams[cat].subs[sub].push({
                     name: row['Subject Name'],
                     url: row['Link'],
-                    icon: iconCode
+                    icon: iconCode 
                 });
             });
 
-            allExamsData = exams; // Save globally
+            allExamsData = exams;
             renderGrid(exams);
         }
 
+        // Helper: Check if icon is Image URL or FontAwesome Code
         function getIconHTML(iconString, isBig = false) {
             if(iconString.startsWith('http')) {
+                // It is an Image
                 return `<img src="${iconString}" class="${isBig ? 'box-icon-img' : ''}" style="${!isBig ? 'width:24px; height:24px; border-radius:4px; object-fit:cover;' : ''}">`;
             } else {
-                return `<i class="fas ${iconString} ${isBig ? 'box-icon-font' : ''}"></i>`;
+                // It is a FontAwesome Icon
+                return `<i class="fas ${iconString} ${isBig ? 'box-icon-font' : ''}" style="${!isBig ? 'color:#4361ee; font-size:1.2rem;' : ''}"></i>`;
             }
         }
 
         function renderGrid(exams) {
             const container = document.getElementById('grid-container');
             if(Object.keys(exams).length === 0) {
-                container.innerHTML = '<p style="text-align:center; grid-column:span 2;">কোনো ডেটা পাওয়া যায়নি।</p>';
+                container.innerHTML = '<p style="text-align:center; grid-column:span 2; margin-top:20px;">কোনো ডেটা পাওয়া যায়নি। গুগল শিট চেক করুন।</p>';
                 return;
             }
 
@@ -233,7 +240,7 @@
             container.innerHTML = html;
         }
 
-        // --- Bottom Sheet Logic ---
+        // --- Popup Logic ---
         function openSheet(examKey) {
             const exam = allExamsData[examKey];
             const sheet = document.getElementById('mySheet');
@@ -241,26 +248,23 @@
             const contentDiv = document.getElementById('sheet-content');
             const headerDiv = document.querySelector('.sheet-header');
 
-            // Set Header
-            const iconHTML = getIconHTML(exam.icon, true).replace('box-icon-font', '').replace('box-icon-img', '').replace('width:50px', 'width:40px'); // Reuse icon logic but smaller
+            // Set Header in Popup
+            const headerIcon = exam.icon.startsWith('http') ? 
+                `<img src="${exam.icon}" style="width:50px; height:50px; border-radius:10px; object-fit:cover;">` : 
+                `<i class="fas ${exam.icon}" style="font-size:2rem; color:#4361ee;"></i>`;
             
-            // Fix icon size for header manually if needed, or just show text
             headerDiv.innerHTML = `
-                <div style="font-size:1.5rem; color:#4361ee;">
-                    ${exam.icon.startsWith('http') ? `<img src="${exam.icon}" style="width:50px; height:50px; border-radius:10px;">` : `<i class="fas ${exam.icon}"></i>`}
-                </div>
+                ${headerIcon}
                 <div class="sheet-title">${exam.name}</div>
-                <i class="fas fa-times" onclick="closeSheet()" style="margin-left:auto; font-size:1.2rem; padding:10px; cursor:pointer;"></i>
+                <i class="fas fa-times" onclick="closeSheet()" style="margin-left:auto; font-size:1.5rem; color:#94a3b8; padding:5px; cursor:pointer;"></i>
             `;
 
-            // Set Links
+            // Set Links in Popup
             let html = '';
             for (const subKey in exam.subs) {
                 html += `<div class="group-label">${subKey}</div>`;
                 exam.subs[subKey].forEach(link => {
-                    const linkIcon = link.icon.startsWith('http') ? 
-                        `<img src="${link.icon}" style="width:24px; height:24px; margin-right:15px; border-radius:4px;">` : 
-                        `<i class="fas ${link.icon}"></i>`;
+                    const linkIcon = getIconHTML(link.icon, false);
 
                     html += `
                         <a href="${link.url}" class="sheet-link">
@@ -273,10 +277,10 @@
             }
             contentDiv.innerHTML = html;
 
-            // Animate In
+            // Show Sheet
             overlay.classList.add('active');
             sheet.classList.add('active');
-            document.body.style.overflow = 'hidden'; // Stop background scrolling
+            document.body.style.overflow = 'hidden'; 
         }
 
         function closeSheet() {
