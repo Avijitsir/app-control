@@ -4,112 +4,78 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Utkarsh Exam Portal</title>
-    
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;600;700&display=swap" rel="stylesheet">
-    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     
     <style>
-        :root { --primary: #4361ee; --bg: #f0f2f5; --glass: #ffffff; }
-        body { font-family: 'Hind Siliguri', sans-serif; background: var(--bg); margin: 0; padding-bottom: 50px; -webkit-tap-highlight-color: transparent; color: #1e293b; user-select: none; overflow-x: hidden; }
+        :root { --primary: #00b0ff; --bg: #f2f4f8; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); margin: 0; padding-bottom: 50px; color: #1e293b; user-select: none; }
         
-        /* Header */
-        header { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 20px rgba(0,0,0,0.03); position: sticky; top: 0; z-index: 100; border-bottom: 1px solid rgba(0,0,0,0.05); }
-        .logo-text { font-weight: 800; font-size: 1.4rem; background: linear-gradient(45deg, #4361ee, #3f37c9); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-
-        .fs-hint { font-size: 0.75rem; color: #94a3b8; text-align: center; margin-top: 8px; font-weight: 500; letter-spacing: 0.5px; }
-
-        /* Dashboard Grid */
+        /* Header & Grid (Same as before) */
+        header { background: white; padding: 15px 20px; display: flex; justify-content: space-between; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
         .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; padding: 20px; }
-        .box { background: white; padding: 25px 15px; border-radius: 20px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.04); cursor: pointer; aspect-ratio: 1/1; display: flex; flex-direction: column; align-items: center; justify-content: center; border: 1px solid white; transition: all 0.2s ease; position: relative; overflow: hidden; }
-        .box:active { transform: scale(0.95); }
-        .box img { width: 65px; height: 65px; border-radius: 14px; margin-bottom: 12px; object-fit: cover; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-        .box i { font-size: 3.5rem; color: var(--primary); margin-bottom: 15px; drop-shadow: 0 4px 10px rgba(67, 97, 238, 0.3); }
-        .box-title { font-weight: 700; color: #334155; font-size: 1rem; }
+        .box { background: white; padding: 20px; border-radius: 16px; text-align: center; cursor: pointer; display: flex; flex-direction: column; align-items: center; }
+        .box img { width: 50px; height: 50px; margin-bottom: 10px; }
+        .box-title { font-weight: 700; }
 
-        /* FULL SCREEN PAGE OVERLAY (The Update) */
-        .sheet { 
-            position: fixed; 
-            top: 0; left: 0; 
-            width: 100%; height: 100%; /* Full Screen */
-            background: var(--bg); /* Matches App Background */
-            z-index: 2000; /* On top of everything */
-            display: flex; flex-direction: column;
-            
-            /* Animation: Zoom/Fade In */
-            opacity: 0; 
-            visibility: hidden;
-            transform: scale(0.95);
-            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-        }
+        /* FULL SCREEN PAGE */
+        .sheet { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #f8f9fa; z-index: 2000; display: flex; flex-direction: column; opacity: 0; visibility: hidden; transform: scale(0.95); transition: 0.2s; }
+        .sheet.active { opacity: 1; visibility: visible; transform: scale(1); }
         
-        .sheet.active { 
-            opacity: 1; 
-            visibility: visible;
-            transform: scale(1);
-        }
+        .sheet-header { background: white; padding: 12px 15px; display: flex; align-items: center; gap: 15px; border-bottom: 1px solid #eee; }
+        .back-btn { font-size: 1.2rem; cursor: pointer; }
         
-        /* New Header for Inner Page */
-        .sheet-header { 
-            background: white; 
-            padding: 15px 20px; 
-            display: flex; align-items: center; gap: 15px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-        }
-        .back-btn { font-size: 1.2rem; color: #333; cursor: pointer; padding: 5px; border-radius: 50%; }
-        .back-btn:active { background: #f0f0f0; }
+        /* LEVEL 1: TOP TABS (Pills) */
+        .top-tabs { display: flex; gap: 10px; padding: 15px 20px 5px 20px; background: white; }
+        .pill-btn { padding: 6px 16px; border-radius: 20px; font-size: 0.85rem; font-weight: 600; cursor: pointer; border: 1px solid #eee; color: #64748b; }
+        .pill-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
+
+        /* LEVEL 2: MAIN MENU (Underline Tabs) */
+        .tabs-wrapper { background: white; padding-bottom: 0px; box-shadow: 0 4px 5px rgba(0,0,0,0.02); }
+        .tabs { display: flex; gap: 20px; overflow-x: auto; padding: 10px 20px 0 20px; scrollbar-width: none; border-bottom: 1px solid #f0f0f0; }
+        .tab-link { font-size: 0.9rem; font-weight: 600; color: #64748b; white-space: nowrap; cursor: pointer; padding-bottom: 10px; border-bottom: 3px solid transparent; }
+        .tab-link.active { color: var(--primary); border-bottom-color: var(--primary); }
         
-        .sheet-title { font-size: 1.3rem; font-weight: 800; color: #1e293b; flex-grow: 1; }
-        
-        /* Tabs */
-        .tabs { display: flex; gap: 12px; overflow-x: auto; padding: 15px 20px 10px 20px; scrollbar-width: none; background: var(--bg); }
-        .tab { background: white; color: #64748b; padding: 10px 22px; border-radius: 30px; white-space: nowrap; cursor: pointer; font-weight: 600; font-size: 0.95rem; transition: 0.2s; border: 1px solid rgba(0,0,0,0.05); box-shadow: 0 2px 5px rgba(0,0,0,0.02); }
-        .tab.active { background: var(--primary); color: white; box-shadow: 0 5px 15px rgba(67, 97, 238, 0.4); border-color: transparent; }
-        
-        /* List */
-        .list { overflow-y: auto; flex-grow: 1; padding: 10px 20px 50px 20px; }
-        .item { display: flex; padding: 18px; background: white; margin-bottom: 12px; border-radius: 18px; text-decoration: none; color: #333; align-items: center; box-shadow: 0 4px 15px rgba(0,0,0,0.02); border: 1px solid white; transition: transform 0.1s; }
-        .item:active { transform: scale(0.98); background: #f8fafc; }
-        .icon-circle { width: 42px; height: 42px; background: #eff6ff; color: var(--primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 18px; font-size: 1.1rem; }
-        
-        .loading { grid-column: span 2; text-align: center; color: #64748b; margin-top: 50px; font-weight: 500; }
+        /* LEVEL 3: SUB FILTER (Chips) */
+        .sub-filters { display: flex; gap: 8px; overflow-x: auto; padding: 15px 20px 5px 20px; scrollbar-width: none; display: none; } /* Hidden by default */
+        .chip { background: white; padding: 5px 12px; border-radius: 6px; font-size: 0.8rem; color: #555; border: 1px solid #ddd; cursor: pointer; white-space: nowrap; }
+        .chip.active { background: #333; color: white; border-color: #333; }
+
+        /* Content List */
+        .list { overflow-y: auto; flex-grow: 1; padding: 15px 20px 50px 20px; }
+        .test-card { background: white; padding: 15px; border-radius: 10px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.03); }
+        .card-title { font-weight: 700; font-size: 0.95rem; }
+        .start-btn { background: var(--primary); color: white; border: none; padding: 8px 15px; border-radius: 5px; font-weight: bold; cursor: pointer; }
     </style>
 </head>
-<body onclick="enableFullScreen()">
+<body>
 
 <header>
-    <span class="logo-text">Exam Portal</span>
-    <i class="fas fa-expand" onclick="forceFullScreen()" style="color:#4361ee; cursor:pointer; font-size:1.2rem;"></i>
+    <span style="font-weight:800; color:#4361ee; font-size:1.2rem;">Exam Portal</span>
 </header>
-<div class="fs-hint">যেকোনো জায়গায় টাচ করলে ফুল স্ক্রিন হবে</div>
 
-<div class="grid" id="examGrid">
-    <div class="loading"><i class="fas fa-spinner fa-spin"></i> লোডিং হচ্ছে...</div>
-</div>
+<div class="grid" id="examGrid">Loading...</div>
 
 <div class="sheet" id="sheet">
     <div class="sheet-header">
         <i class="fas fa-arrow-left back-btn" onclick="closeSheet()"></i>
-        <span class="sheet-title" id="sheetTitle">Exam Name</span>
+        <span style="font-weight:bold; font-size:1.1rem;" id="sheetTitle">Exam Name</span>
     </div>
-    
-    <div class="tabs" id="tabContainer"></div>
+
+    <div class="top-tabs" id="topTabsContainer"></div>
+
+    <div class="tabs-wrapper">
+        <div class="tabs" id="mainMenuContainer"></div>
+    </div>
+
+    <div class="sub-filters" id="subFilterContainer"></div>
+
     <div class="list" id="listContainer"></div>
 </div>
 
 <script>
-    function enableFullScreen() {
-        if (!document.fullscreenElement) {
-            document.documentElement.requestFullscreen().catch((err) => {});
-            document.querySelector('.fs-hint').style.display = 'none';
-        }
-    }
-    function forceFullScreen() {
-        (!document.fullscreenElement) ? document.documentElement.requestFullscreen() : document.exitFullscreen();
-    }
-
     const firebaseConfig = {
         apiKey: "AIzaSyDwGzTPmFg-gjoYtNWNJM47p22NfBugYFA",
         authDomain: "mock-test-1eea6.firebaseapp.com",
@@ -120,89 +86,135 @@
         appId: "1:111849173136:web:8b211f58d854119e88a815",
         measurementId: "G-5RLWPTP8YD"
     };
-
     if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
     const db = firebase.database();
     let allData = [];
 
-    // Load Data
+    // --- LOAD DATA ---
     db.ref('exams').on('value', (snapshot) => {
         const data = snapshot.val();
         const grid = document.getElementById('examGrid');
         grid.innerHTML = "";
+        if(!data) return;
         
-        if(!data) { 
-            grid.innerHTML = '<div class="loading">কোনো ডেটা পাওয়া যায়নি।</div>'; 
-            return; 
-        }
-
         allData = Object.values(data);
         const uniqueExams = [...new Set(allData.map(item => item.category))];
 
         uniqueExams.forEach(cat => {
             const item = allData.find(d => d.category === cat);
-            let iconHtml = `<img src="${item.icon}">`;
-            if(!item.icon || (!item.icon.startsWith('data:image') && !item.icon.startsWith('http'))) {
-                iconHtml = `<i class="${item.icon || 'fas fa-graduation-cap'}"></i>`;
-            }
-
+            let icon = item.icon || "https://cdn-icons-png.flaticon.com/512/2995/2995620.png";
             grid.innerHTML += `
                 <div class="box" onclick="openSheet('${cat}')">
-                    ${iconHtml}
+                    <img src="${icon}">
                     <div class="box-title">${cat}</div>
-                </div>
-            `;
+                </div>`;
         });
     });
 
-    // Open Full Screen Page
-    window.openSheet = function(category) {
-        enableFullScreen(); // Ensure Full Screen
-        document.getElementById('sheetTitle').innerText = category;
+    // --- NAVIGATION LOGIC ---
+    let currentExam = "";
+    let currentTopTab = "";
+    let currentMenu = "";
+    let currentSub = "";
+
+    function openSheet(cat) {
+        currentExam = cat;
+        document.getElementById('sheetTitle').innerText = cat;
+        document.getElementById('sheet').classList.add('active');
         
-        const filtered = allData.filter(d => d.category === category);
-        const subjects = [...new Set(filtered.map(d => d.subject))];
+        // 1. Render Top Tabs (Mock Test, PYP)
+        const examData = allData.filter(d => d.category === cat);
+        const topTabs = [...new Set(examData.map(d => d.topTab || "Mock Tests"))]; // Default if missing
         
-        const tabCont = document.getElementById('tabContainer');
-        tabCont.innerHTML = "";
+        const topCont = document.getElementById('topTabsContainer');
+        topCont.innerHTML = "";
         
-        subjects.forEach((sub, idx) => {
-            tabCont.innerHTML += `<div class="tab ${idx===0?'active':''}" onclick="filterList('${category}', '${sub}', this)">${sub}</div>`;
+        topTabs.forEach((tab, idx) => {
+            topCont.innerHTML += `<div class="pill-btn ${idx===0?'active':''}" onclick="selectTopTab('${tab}', this)">${tab}</div>`;
         });
 
-        if(subjects.length > 0) {
-            filterList(category, subjects[0], document.querySelector('.tab'));
-        } else {
-            document.getElementById('listContainer').innerHTML = "<p style='text-align:center; color:#999; margin-top:50px;'>কোনো কনটেন্ট নেই।</p>";
-        }
-        
-        document.getElementById('sheet').classList.add('active');
+        // Select first tab by default
+        if(topTabs.length > 0) selectTopTab(topTabs[0], document.querySelector('.pill-btn'));
     }
 
-    // Filter Logic
-    window.filterList = function(cat, sub, el) {
-        if(el) {
-            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-            el.classList.add('active');
-        }
+    function selectTopTab(tab, el) {
+        currentTopTab = tab;
+        // Visual Update
+        document.querySelectorAll('.pill-btn').forEach(b => b.classList.remove('active'));
+        if(el) el.classList.add('active');
+
+        // 2. Render Main Menu (Subject / Category)
+        const filtered = allData.filter(d => d.category === currentExam && (d.topTab || "Mock Tests") === tab);
+        const menus = [...new Set(filtered.map(d => d.subject))];
+
+        const menuCont = document.getElementById('mainMenuContainer');
+        menuCont.innerHTML = "";
         
+        menus.forEach((m, idx) => {
+            menuCont.innerHTML += `<div class="tab-link ${idx===0?'active':''}" onclick="selectMenu('${m}', this)">${m}</div>`;
+        });
+
+        if(menus.length > 0) selectMenu(menus[0], document.querySelector('.tab-link'));
+        else document.getElementById('listContainer').innerHTML = "No Content";
+    }
+
+    function selectMenu(menu, el) {
+        currentMenu = menu;
+        document.querySelectorAll('.tab-link').forEach(b => b.classList.remove('active'));
+        if(el) el.classList.add('active');
+
+        // 3. Render Sub Filters (Optional Level)
+        const filtered = allData.filter(d => d.category === currentExam && (d.topTab || "Mock Tests") === currentTopTab && d.subject === menu);
+        
+        // Check if any item has a subFilter
+        const subFilters = [...new Set(filtered.map(d => d.subFilter).filter(s => s))]; // Filter out empty/undefined
+        
+        const subCont = document.getElementById('subFilterContainer');
+        subCont.innerHTML = "";
+
+        if (subFilters.length > 0) {
+            subCont.style.display = 'flex';
+            subCont.innerHTML = `<div class="chip active" onclick="selectSub('ALL', this)">All</div>`;
+            subFilters.forEach(sub => {
+                subCont.innerHTML += `<div class="chip" onclick="selectSub('${sub}', this)">${sub}</div>`;
+            });
+            selectSub('ALL', document.querySelector('.chip')); // Default to ALL
+        } else {
+            subCont.style.display = 'none'; // Hide if no subfilters
+            renderList(filtered); // Render all directly
+        }
+    }
+
+    function selectSub(sub, el) {
+        currentSub = sub;
+        document.querySelectorAll('.chip').forEach(b => b.classList.remove('active'));
+        if(el) el.classList.add('active');
+
+        let filtered = allData.filter(d => d.category === currentExam && (d.topTab || "Mock Tests") === currentTopTab && d.subject === currentMenu);
+        
+        if (sub !== 'ALL') {
+            filtered = filtered.filter(d => d.subFilter === sub);
+        }
+        renderList(filtered);
+    }
+
+    function renderList(items) {
         const list = document.getElementById('listContainer');
         list.innerHTML = "";
-        
-        const items = allData.filter(d => d.category === cat && d.subject === sub);
         items.forEach(item => {
             list.innerHTML += `
-                <a href="${item.link}" class="item">
-                    <div class="icon-circle"><i class="fas fa-play"></i></div>
-                    <div style="flex-grow:1; font-weight:600; font-size:0.95rem;">${item.chapter}</div>
-                    <i class="fas fa-chevron-right" style="color:#cbd5e1;"></i>
-                </a>
+                <div class="test-card">
+                    <div class="card-info">
+                        <div class="card-title">${item.chapter}</div>
+                        <div style="font-size:0.8rem; color:#666;">${item.subject} ${item.subFilter ? '• '+item.subFilter : ''}</div>
+                    </div>
+                    <button class="start-btn" onclick="window.location.href='${item.link}'">Start</button>
+                </div>
             `;
         });
     }
 
-    // Close Page
-    window.closeSheet = function() {
+    function closeSheet() {
         document.getElementById('sheet').classList.remove('active');
     }
 </script>
