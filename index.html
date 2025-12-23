@@ -12,57 +12,67 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     
     <style>
-        :root { --primary: #4361ee; --bg: #f0f2f5; --glass: rgba(255, 255, 255, 0.95); }
-        body { font-family: 'Hind Siliguri', sans-serif; background: var(--bg); margin: 0; padding-bottom: 50px; -webkit-tap-highlight-color: transparent; color: #1e293b; user-select: none; }
+        :root { --primary: #4361ee; --bg: #f0f2f5; --glass: #ffffff; }
+        body { font-family: 'Hind Siliguri', sans-serif; background: var(--bg); margin: 0; padding-bottom: 50px; -webkit-tap-highlight-color: transparent; color: #1e293b; user-select: none; overflow-x: hidden; }
         
-        /* Header Modernization */
-        header { background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 20px rgba(0,0,0,0.03); position: sticky; top: 0; z-index: 100; border-bottom: 1px solid rgba(0,0,0,0.05); }
+        /* Header */
+        header { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 20px rgba(0,0,0,0.03); position: sticky; top: 0; z-index: 100; border-bottom: 1px solid rgba(0,0,0,0.05); }
         .logo-text { font-weight: 800; font-size: 1.4rem; background: linear-gradient(45deg, #4361ee, #3f37c9); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
 
         .fs-hint { font-size: 0.75rem; color: #94a3b8; text-align: center; margin-top: 8px; font-weight: 500; letter-spacing: 0.5px; }
 
-        /* Grid Layout & Boxes */
+        /* Dashboard Grid */
         .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; padding: 20px; }
-        .box { background: white; padding: 25px 15px; border-radius: 20px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.04); cursor: pointer; aspect-ratio: 1/1; display: flex; flex-direction: column; align-items: center; justify-content: center; border: 1px solid white; transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); position: relative; overflow: hidden; }
+        .box { background: white; padding: 25px 15px; border-radius: 20px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.04); cursor: pointer; aspect-ratio: 1/1; display: flex; flex-direction: column; align-items: center; justify-content: center; border: 1px solid white; transition: all 0.2s ease; position: relative; overflow: hidden; }
         .box:active { transform: scale(0.95); }
         .box img { width: 65px; height: 65px; border-radius: 14px; margin-bottom: 12px; object-fit: cover; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
         .box i { font-size: 3.5rem; color: var(--primary); margin-bottom: 15px; drop-shadow: 0 4px 10px rgba(67, 97, 238, 0.3); }
         .box-title { font-weight: 700; color: #334155; font-size: 1rem; }
 
-        /* Modern Bottom Sheet */
-        .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.3); display: none; z-index: 998; backdrop-filter: blur(4px); transition: opacity 0.3s; }
-        
+        /* FULL SCREEN PAGE OVERLAY (The Update) */
         .sheet { 
-            position: fixed; bottom: -100%; left: 0; width: 100%; 
-            background: var(--glass); 
-            backdrop-filter: blur(15px); 
-            border-radius: 30px 30px 0 0; 
-            padding: 10px 20px 20px 20px; box-sizing: border-box; 
-            transition: bottom 0.5s cubic-bezier(0.32, 1, 0.23, 1); 
-            height: 85vh; display: flex; flex-direction: column; z-index: 999; 
-            box-shadow: 0 -10px 40px rgba(0,0,0,0.1); border-top: 1px solid rgba(255,255,255,0.5);
-        }
-        .sheet.active { bottom: 0; }
-        
-        /* Drag Handle */
-        .sheet::before {
-            content: ''; display: block; width: 40px; height: 5px; 
-            background: #cbd5e1; border-radius: 10px; margin: 10px auto 20px auto;
+            position: fixed; 
+            top: 0; left: 0; 
+            width: 100%; height: 100%; /* Full Screen */
+            background: var(--bg); /* Matches App Background */
+            z-index: 2000; /* On top of everything */
+            display: flex; flex-direction: column;
+            
+            /* Animation: Zoom/Fade In */
+            opacity: 0; 
+            visibility: hidden;
+            transform: scale(0.95);
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
         }
         
-        .sheet-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding-bottom: 10px; }
-        .sheet-title { font-size: 1.5rem; font-weight: 800; color: #1e293b; }
+        .sheet.active { 
+            opacity: 1; 
+            visibility: visible;
+            transform: scale(1);
+        }
         
-        /* Modern Tabs */
-        .tabs { display: flex; gap: 12px; overflow-x: auto; padding-bottom: 10px; scrollbar-width: none; }
-        .tab { background: rgba(255,255,255,0.6); color: #64748b; padding: 10px 22px; border-radius: 30px; white-space: nowrap; cursor: pointer; font-weight: 600; font-size: 0.95rem; transition: 0.2s; border: 1px solid rgba(0,0,0,0.05); }
+        /* New Header for Inner Page */
+        .sheet-header { 
+            background: white; 
+            padding: 15px 20px; 
+            display: flex; align-items: center; gap: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        .back-btn { font-size: 1.2rem; color: #333; cursor: pointer; padding: 5px; border-radius: 50%; }
+        .back-btn:active { background: #f0f0f0; }
+        
+        .sheet-title { font-size: 1.3rem; font-weight: 800; color: #1e293b; flex-grow: 1; }
+        
+        /* Tabs */
+        .tabs { display: flex; gap: 12px; overflow-x: auto; padding: 15px 20px 10px 20px; scrollbar-width: none; background: var(--bg); }
+        .tab { background: white; color: #64748b; padding: 10px 22px; border-radius: 30px; white-space: nowrap; cursor: pointer; font-weight: 600; font-size: 0.95rem; transition: 0.2s; border: 1px solid rgba(0,0,0,0.05); box-shadow: 0 2px 5px rgba(0,0,0,0.02); }
         .tab.active { background: var(--primary); color: white; box-shadow: 0 5px 15px rgba(67, 97, 238, 0.4); border-color: transparent; }
         
-        /* List Items */
-        .list { overflow-y: auto; flex-grow: 1; margin-top: 15px; padding-bottom: 20px; }
-        .item { display: flex; padding: 18px; background: white; margin-bottom: 12px; border-radius: 18px; text-decoration: none; color: #333; align-items: center; box-shadow: 0 4px 15px rgba(0,0,0,0.02); border: 1px solid rgba(255,255,255,0.5); transition: transform 0.1s; }
+        /* List */
+        .list { overflow-y: auto; flex-grow: 1; padding: 10px 20px 50px 20px; }
+        .item { display: flex; padding: 18px; background: white; margin-bottom: 12px; border-radius: 18px; text-decoration: none; color: #333; align-items: center; box-shadow: 0 4px 15px rgba(0,0,0,0.02); border: 1px solid white; transition: transform 0.1s; }
         .item:active { transform: scale(0.98); background: #f8fafc; }
-        .icon-circle { width: 42px; height: 42px; background: #eff6ff; color: var(--primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 18px; font-size: 1.1rem; box-shadow: 0 4px 10px rgba(67, 97, 238, 0.15); }
+        .icon-circle { width: 42px; height: 42px; background: #eff6ff; color: var(--primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 18px; font-size: 1.1rem; }
         
         .loading { grid-column: span 2; text-align: center; color: #64748b; margin-top: 50px; font-weight: 500; }
     </style>
@@ -79,12 +89,12 @@
     <div class="loading"><i class="fas fa-spinner fa-spin"></i> লোডিং হচ্ছে...</div>
 </div>
 
-<div class="overlay" onclick="closeSheet()"></div>
 <div class="sheet" id="sheet">
     <div class="sheet-header">
-        <span class="sheet-title" id="sheetTitle">Exam</span>
-        <i class="fas fa-times" onclick="closeSheet()" style="font-size:1.5rem; color:#94a3b8; cursor:pointer; padding: 5px;"></i>
+        <i class="fas fa-arrow-left back-btn" onclick="closeSheet()"></i>
+        <span class="sheet-title" id="sheetTitle">Exam Name</span>
     </div>
+    
     <div class="tabs" id="tabContainer"></div>
     <div class="list" id="listContainer"></div>
 </div>
@@ -92,7 +102,7 @@
 <script>
     function enableFullScreen() {
         if (!document.fullscreenElement) {
-            document.documentElement.requestFullscreen().catch((err) => console.log("FS blocked"));
+            document.documentElement.requestFullscreen().catch((err) => {});
             document.querySelector('.fs-hint').style.display = 'none';
         }
     }
@@ -115,6 +125,7 @@
     const db = firebase.database();
     let allData = [];
 
+    // Load Data
     db.ref('exams').on('value', (snapshot) => {
         const data = snapshot.val();
         const grid = document.getElementById('examGrid');
@@ -144,9 +155,11 @@
         });
     });
 
+    // Open Full Screen Page
     window.openSheet = function(category) {
-        enableFullScreen();
+        enableFullScreen(); // Ensure Full Screen
         document.getElementById('sheetTitle').innerText = category;
+        
         const filtered = allData.filter(d => d.category === category);
         const subjects = [...new Set(filtered.map(d => d.subject))];
         
@@ -160,13 +173,13 @@
         if(subjects.length > 0) {
             filterList(category, subjects[0], document.querySelector('.tab'));
         } else {
-            document.getElementById('listContainer').innerHTML = "<p style='text-align:center; color:#999; margin-top:20px;'>কোনো কনটেন্ট নেই।</p>";
+            document.getElementById('listContainer').innerHTML = "<p style='text-align:center; color:#999; margin-top:50px;'>কোনো কনটেন্ট নেই।</p>";
         }
         
-        document.querySelector('.overlay').style.display = 'block';
         document.getElementById('sheet').classList.add('active');
     }
 
+    // Filter Logic
     window.filterList = function(cat, sub, el) {
         if(el) {
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
@@ -188,8 +201,8 @@
         });
     }
 
+    // Close Page
     window.closeSheet = function() {
-        document.querySelector('.overlay').style.display = 'none';
         document.getElementById('sheet').classList.remove('active');
     }
 </script>
