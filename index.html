@@ -12,11 +12,14 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     
     <style>
-        body { font-family: 'Hind Siliguri', sans-serif; background: #f8f9fa; margin: 0; padding-bottom: 50px; -webkit-tap-highlight-color: transparent; color: #1e293b; }
+        body { font-family: 'Hind Siliguri', sans-serif; background: #f8f9fa; margin: 0; padding-bottom: 50px; -webkit-tap-highlight-color: transparent; color: #1e293b; user-select: none; }
         
         /* Header */
         header { background: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.05); position: sticky; top: 0; z-index: 100; }
         .logo-text { font-weight: 700; font-size: 1.3rem; color: #4361ee; }
+
+        /* Full Screen Hint */
+        .fs-hint { font-size: 0.8rem; color: #999; text-align: center; margin-top: 5px; }
 
         /* Grid Layout */
         .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; padding: 20px; }
@@ -48,12 +51,13 @@
         .loading { grid-column: span 2; text-align: center; color: #64748b; margin-top: 50px; font-weight: 500; }
     </style>
 </head>
-<body>
+<body onclick="enableFullScreen()">
 
 <header>
     <span class="logo-text">Exam Portal</span>
-    <i class="fas fa-sync-alt" onclick="location.reload()" style="color:#4361ee; cursor:pointer; font-size:1.2rem;"></i>
+    <i class="fas fa-expand" onclick="forceFullScreen()" style="color:#4361ee; cursor:pointer; font-size:1.2rem;"></i>
 </header>
+<div class="fs-hint">যেকোনো জায়গায় টাচ করলে ফুল স্ক্রিন হবে</div>
 
 <div class="grid" id="examGrid">
     <div class="loading"><i class="fas fa-spinner fa-spin"></i> লোডিং হচ্ছে...</div>
@@ -71,7 +75,28 @@
 
 <script>
     // ============================================
-    //  আপনার দেওয়া কনফিগারেশন বসানো হয়েছে
+    //  ফুল স্ক্রিন লজিক (Full Screen Logic)
+    // ============================================
+    function enableFullScreen() {
+        if (!document.fullscreenElement) {
+            document.documentElement.requestFullscreen().catch((err) => {
+                console.log("Full screen prevented: " + err.message);
+            });
+            // একবার ফুল স্ক্রিন হয়ে গেলে হিন্ট টেক্সট সরিয়ে দেওয়া হবে
+            document.querySelector('.fs-hint').style.display = 'none';
+        }
+    }
+
+    function forceFullScreen() {
+        if (!document.fullscreenElement) {
+            document.documentElement.requestFullscreen();
+        } else {
+            document.exitFullscreen();
+        }
+    }
+
+    // ============================================
+    //  Firebase Config
     // ============================================
     const firebaseConfig = {
         apiKey: "AIzaSyDwGzTPmFg-gjoYtNWNJM47p22NfBugYFA",
@@ -84,7 +109,6 @@
         measurementId: "G-5RLWPTP8YD"
     };
 
-    // Initialize Firebase
     if (!firebase.apps.length) {
         firebase.initializeApp(firebaseConfig);
     }
@@ -110,7 +134,7 @@
         uniqueExams.forEach(cat => {
             const item = allData.find(d => d.category === cat);
             
-            // Check Icon Type (Image or FontAwesome)
+            // Check Icon Type
             let iconHtml = `<img src="${item.icon}">`;
             if(!item.icon.startsWith('data:image') && !item.icon.startsWith('http')) {
                 iconHtml = `<i class="${item.icon || 'fas fa-graduation-cap'}"></i>`;
@@ -127,6 +151,9 @@
 
     // Open Sheet & Tabs
     window.openSheet = function(category) {
+        // ফোল্ডার খোলার সময়ও ফুল স্ক্রিন নিশ্চিত করা হচ্ছে
+        enableFullScreen();
+
         document.getElementById('sheetTitle').innerText = category;
         const filtered = allData.filter(d => d.category === category);
         
