@@ -12,41 +12,57 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     
     <style>
-        body { font-family: 'Hind Siliguri', sans-serif; background: #f8f9fa; margin: 0; padding-bottom: 50px; -webkit-tap-highlight-color: transparent; color: #1e293b; user-select: none; }
+        :root { --primary: #4361ee; --bg: #f0f2f5; --glass: rgba(255, 255, 255, 0.95); }
+        body { font-family: 'Hind Siliguri', sans-serif; background: var(--bg); margin: 0; padding-bottom: 50px; -webkit-tap-highlight-color: transparent; color: #1e293b; user-select: none; }
         
-        /* Header */
-        header { background: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.05); position: sticky; top: 0; z-index: 100; }
-        .logo-text { font-weight: 700; font-size: 1.3rem; color: #4361ee; }
+        /* Header Modernization */
+        header { background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 20px rgba(0,0,0,0.03); position: sticky; top: 0; z-index: 100; border-bottom: 1px solid rgba(0,0,0,0.05); }
+        .logo-text { font-weight: 800; font-size: 1.4rem; background: linear-gradient(45deg, #4361ee, #3f37c9); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
 
-        /* Full Screen Hint */
-        .fs-hint { font-size: 0.8rem; color: #999; text-align: center; margin-top: 5px; }
+        .fs-hint { font-size: 0.75rem; color: #94a3b8; text-align: center; margin-top: 8px; font-weight: 500; letter-spacing: 0.5px; }
 
-        /* Grid Layout */
+        /* Grid Layout & Boxes */
         .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; padding: 20px; }
-        .box { background: white; padding: 20px 10px; border-radius: 16px; text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.03); cursor: pointer; aspect-ratio: 1/1; display: flex; flex-direction: column; align-items: center; justify-content: center; border: 1px solid #f0f0f0; transition: transform 0.1s; }
-        .box:active { transform: scale(0.96); background: #eff6ff; }
-        .box img { width: 60px; height: 60px; border-radius: 12px; margin-bottom: 12px; object-fit: cover; border: 1px solid #eee; }
-        .box i { font-size: 3rem; color: #4361ee; margin-bottom: 12px; }
-        .box-title { font-weight: 600; color: #333; font-size: 1rem; }
+        .box { background: white; padding: 25px 15px; border-radius: 20px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.04); cursor: pointer; aspect-ratio: 1/1; display: flex; flex-direction: column; align-items: center; justify-content: center; border: 1px solid white; transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); position: relative; overflow: hidden; }
+        .box:active { transform: scale(0.95); }
+        .box img { width: 65px; height: 65px; border-radius: 14px; margin-bottom: 12px; object-fit: cover; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .box i { font-size: 3.5rem; color: var(--primary); margin-bottom: 15px; drop-shadow: 0 4px 10px rgba(67, 97, 238, 0.3); }
+        .box-title { font-weight: 700; color: #334155; font-size: 1rem; }
 
-        /* Bottom Sheet Popup */
-        .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: none; z-index: 998; backdrop-filter: blur(2px); }
-        .sheet { position: fixed; bottom: -100%; left: 0; width: 100%; background: white; border-radius: 25px 25px 0 0; padding: 20px; box-sizing: border-box; transition: 0.3s cubic-bezier(0.1, 0.9, 0.2, 1); height: 80vh; display: flex; flex-direction: column; z-index: 999; box-shadow: 0 -5px 30px rgba(0,0,0,0.15); }
+        /* Modern Bottom Sheet */
+        .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.3); display: none; z-index: 998; backdrop-filter: blur(4px); transition: opacity 0.3s; }
+        
+        .sheet { 
+            position: fixed; bottom: -100%; left: 0; width: 100%; 
+            background: var(--glass); 
+            backdrop-filter: blur(15px); 
+            border-radius: 30px 30px 0 0; 
+            padding: 10px 20px 20px 20px; box-sizing: border-box; 
+            transition: bottom 0.5s cubic-bezier(0.32, 1, 0.23, 1); 
+            height: 85vh; display: flex; flex-direction: column; z-index: 999; 
+            box-shadow: 0 -10px 40px rgba(0,0,0,0.1); border-top: 1px solid rgba(255,255,255,0.5);
+        }
         .sheet.active { bottom: 0; }
         
-        .sheet-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid #f1f5f9; }
-        .sheet-title { font-size: 1.3rem; font-weight: 700; color: #333; }
+        /* Drag Handle */
+        .sheet::before {
+            content: ''; display: block; width: 40px; height: 5px; 
+            background: #cbd5e1; border-radius: 10px; margin: 10px auto 20px auto;
+        }
         
-        /* Tabs (Subjects) */
-        .tabs { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 10px; scrollbar-width: none; }
-        .tab { background: #f1f5f9; color: #64748b; padding: 8px 18px; border-radius: 20px; white-space: nowrap; cursor: pointer; font-weight: 600; font-size: 0.9rem; transition: 0.2s; }
-        .tab.active { background: #4361ee; color: white; box-shadow: 0 4px 10px rgba(67, 97, 238, 0.3); }
+        .sheet-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding-bottom: 10px; }
+        .sheet-title { font-size: 1.5rem; font-weight: 800; color: #1e293b; }
         
-        /* List (Chapters) */
-        .list { overflow-y: auto; flex-grow: 1; margin-top: 10px; }
-        .item { display: flex; padding: 15px; background: #fff; margin-bottom: 10px; border-radius: 12px; text-decoration: none; color: #333; align-items: center; border: 1px solid #f1f5f9; box-shadow: 0 2px 5px rgba(0,0,0,0.02); }
-        .item:active { background: #f8fafc; transform: scale(0.99); }
-        .icon-circle { width: 35px; height: 35px; background: #eff6ff; color: #4361ee; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 15px; font-size: 1rem; }
+        /* Modern Tabs */
+        .tabs { display: flex; gap: 12px; overflow-x: auto; padding-bottom: 10px; scrollbar-width: none; }
+        .tab { background: rgba(255,255,255,0.6); color: #64748b; padding: 10px 22px; border-radius: 30px; white-space: nowrap; cursor: pointer; font-weight: 600; font-size: 0.95rem; transition: 0.2s; border: 1px solid rgba(0,0,0,0.05); }
+        .tab.active { background: var(--primary); color: white; box-shadow: 0 5px 15px rgba(67, 97, 238, 0.4); border-color: transparent; }
+        
+        /* List Items */
+        .list { overflow-y: auto; flex-grow: 1; margin-top: 15px; padding-bottom: 20px; }
+        .item { display: flex; padding: 18px; background: white; margin-bottom: 12px; border-radius: 18px; text-decoration: none; color: #333; align-items: center; box-shadow: 0 4px 15px rgba(0,0,0,0.02); border: 1px solid rgba(255,255,255,0.5); transition: transform 0.1s; }
+        .item:active { transform: scale(0.98); background: #f8fafc; }
+        .icon-circle { width: 42px; height: 42px; background: #eff6ff; color: var(--primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 18px; font-size: 1.1rem; box-shadow: 0 4px 10px rgba(67, 97, 238, 0.15); }
         
         .loading { grid-column: span 2; text-align: center; color: #64748b; margin-top: 50px; font-weight: 500; }
     </style>
@@ -74,30 +90,16 @@
 </div>
 
 <script>
-    // ============================================
-    //  ফুল স্ক্রিন লজিক (Full Screen Logic)
-    // ============================================
     function enableFullScreen() {
         if (!document.fullscreenElement) {
-            document.documentElement.requestFullscreen().catch((err) => {
-                console.log("Full screen prevented: " + err.message);
-            });
-            // একবার ফুল স্ক্রিন হয়ে গেলে হিন্ট টেক্সট সরিয়ে দেওয়া হবে
+            document.documentElement.requestFullscreen().catch((err) => console.log("FS blocked"));
             document.querySelector('.fs-hint').style.display = 'none';
         }
     }
-
     function forceFullScreen() {
-        if (!document.fullscreenElement) {
-            document.documentElement.requestFullscreen();
-        } else {
-            document.exitFullscreen();
-        }
+        (!document.fullscreenElement) ? document.documentElement.requestFullscreen() : document.exitFullscreen();
     }
 
-    // ============================================
-    //  Firebase Config
-    // ============================================
     const firebaseConfig = {
         apiKey: "AIzaSyDwGzTPmFg-gjoYtNWNJM47p22NfBugYFA",
         authDomain: "mock-test-1eea6.firebaseapp.com",
@@ -109,13 +111,10 @@
         measurementId: "G-5RLWPTP8YD"
     };
 
-    if (!firebase.apps.length) {
-        firebase.initializeApp(firebaseConfig);
-    }
+    if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
     const db = firebase.database();
     let allData = [];
 
-    // Load Data
     db.ref('exams').on('value', (snapshot) => {
         const data = snapshot.val();
         const grid = document.getElementById('examGrid');
@@ -127,16 +126,12 @@
         }
 
         allData = Object.values(data);
-        
-        // Find Unique Exams
         const uniqueExams = [...new Set(allData.map(item => item.category))];
 
         uniqueExams.forEach(cat => {
             const item = allData.find(d => d.category === cat);
-            
-            // Check Icon Type
             let iconHtml = `<img src="${item.icon}">`;
-            if(!item.icon.startsWith('data:image') && !item.icon.startsWith('http')) {
+            if(!item.icon || (!item.icon.startsWith('data:image') && !item.icon.startsWith('http'))) {
                 iconHtml = `<i class="${item.icon || 'fas fa-graduation-cap'}"></i>`;
             }
 
@@ -149,15 +144,12 @@
         });
     });
 
-    // Open Sheet & Tabs
     window.openSheet = function(category) {
-        // ফোল্ডার খোলার সময়ও ফুল স্ক্রিন নিশ্চিত করা হচ্ছে
         enableFullScreen();
-
         document.getElementById('sheetTitle').innerText = category;
         const filtered = allData.filter(d => d.category === category);
-        
         const subjects = [...new Set(filtered.map(d => d.subject))];
+        
         const tabCont = document.getElementById('tabContainer');
         tabCont.innerHTML = "";
         
@@ -175,7 +167,6 @@
         document.getElementById('sheet').classList.add('active');
     }
 
-    // Filter List
     window.filterList = function(cat, sub, el) {
         if(el) {
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
