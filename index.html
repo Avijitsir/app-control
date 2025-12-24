@@ -13,32 +13,48 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     
     <style>
-        :root { --primary: #00b0ff; --bg: #f2f4f8; }
-        body { font-family: 'Inter', sans-serif; background: var(--bg); margin: 0; padding-bottom: 50px; color: #1e293b; user-select: none; -webkit-tap-highlight-color: transparent; }
+        :root { --primary: #00b0ff; --bg: #f2f4f8; --text: #1e293b; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); margin: 0; padding-bottom: 50px; color: var(--text); user-select: none; -webkit-tap-highlight-color: transparent; }
         
         /* Header */
-        header { background: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+        header { background: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.05); position: sticky; top: 0; z-index: 10; }
         .logo-text { font-weight: 800; font-size: 1.2rem; color: #4361ee; }
-        .login-btn { font-size: 0.9rem; font-weight: bold; color: var(--primary); cursor: pointer; display: flex; align-items: center; gap: 5px; }
+        .login-btn { font-size: 0.9rem; font-weight: 600; color: #444; cursor: pointer; display: flex; align-items: center; gap: 8px; background: #f0f2f5; padding: 5px 12px; border-radius: 20px; }
 
-        /* Grid */
+        /* Grid Layout */
         .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; padding: 20px; }
-        .box { background: white; padding: 20px; border-radius: 16px; text-align: center; cursor: pointer; display: flex; flex-direction: column; align-items: center; box-shadow: 0 2px 8px rgba(0,0,0,0.03); border: 1px solid white; }
+        .box { background: white; padding: 20px; border-radius: 16px; text-align: center; cursor: pointer; display: flex; flex-direction: column; align-items: center; box-shadow: 0 2px 8px rgba(0,0,0,0.03); border: 1px solid white; transition: 0.1s; }
+        .box:active { transform: scale(0.96); background: #f0f9ff; }
         .box img { width: 50px; height: 50px; margin-bottom: 10px; border-radius: 10px; }
+        .box-title { font-weight: 700; font-size: 0.95rem; }
 
         /* Full Screen Sheet */
-        .sheet { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #f8f9fa; z-index: 99999; display: flex; flex-direction: column; transform: translateX(100%); transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); }
+        .sheet { 
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; 
+            background: #f8f9fa; z-index: 99999; 
+            display: flex; flex-direction: column; 
+            transform: translateX(100%); transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
         .sheet.active { transform: translateX(0); }
+        
         .sheet-header { background: white; padding: 12px 15px; display: flex; align-items: center; gap: 15px; border-bottom: 1px solid #eee; }
-        
-        /* Lists */
+        .back-btn { font-size: 1.2rem; cursor: pointer; padding: 5px; }
+
+        /* List Items */
         .list { overflow-y: auto; flex-grow: 1; padding: 15px 20px 80px 20px; }
-        .test-card { background: white; padding: 15px; border-radius: 10px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.03); }
-        .card-info { flex-grow: 1; }
-        .card-title { font-weight: 700; font-size: 0.95rem; }
-        .start-btn { background: var(--primary); color: white; border: none; padding: 8px 15px; border-radius: 5px; font-weight: bold; cursor: pointer; font-size: 0.85rem; text-decoration: none; }
+        .test-card { background: white; padding: 15px; border-radius: 12px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.03); border-left: 5px solid transparent; }
         
-        .attempted-badge { background: #e8f5e9; color: #2e7d32; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; margin-top: 5px; display: inline-block; }
+        .card-info { flex-grow: 1; }
+        .card-title { font-weight: 700; font-size: 0.95rem; margin-bottom: 4px; }
+        .card-sub { font-size: 0.8rem; color: #64748b; }
+        
+        .start-btn { padding: 8px 16px; border-radius: 6px; font-weight: 600; font-size: 0.85rem; border: none; cursor: pointer; color: white; white-space: nowrap; }
+        
+        /* Badges */
+        .badge-live { color: #e74c3c; font-weight: bold; font-size: 0.75rem; display: flex; align-items: center; gap: 5px; animation: pulse 1.5s infinite; }
+        .badge-score { background: #e8f5e9; color: #2e7d32; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; display: inline-block; margin-top: 5px; }
+
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.6; } 100% { opacity: 1; } }
     </style>
 </head>
 <body>
@@ -50,20 +66,22 @@
     </div>
 </header>
 
-<div class="grid" id="examGrid">Loading...</div>
+<div class="grid" id="examGrid">
+    <div style="grid-column:span 2; text-align:center; margin-top:50px; color:#888;">লোডিং হচ্ছে...</div>
+</div>
 
 <div class="sheet" id="sheet">
     <div class="sheet-header">
-        <i class="fas fa-arrow-left" onclick="goBack()" style="font-size:1.2rem; cursor:pointer;"></i>
-        <span style="font-weight:bold; font-size:1.1rem; flex-grow:1;" id="sheetTitle">Exam</span>
+        <i class="fas fa-arrow-left back-btn" onclick="goBack()"></i>
+        <span style="font-weight:bold; font-size:1.1rem;" id="sheetTitle">Exam Name</span>
     </div>
-    <div id="topTabsContainer" style="padding:10px 20px; background:white; display:flex; gap:10px;"></div>
-    <div id="mainMenuContainer" style="padding:0 20px; background:white; border-bottom:1px solid #eee; display:flex; gap:20px; overflow-x:auto;"></div>
     <div class="list" id="listContainer"></div>
 </div>
 
 <script>
-    // Firebase Config
+    // ==========================================
+    //  Firebase Configuration
+    // ==========================================
     const firebaseConfig = {
         apiKey: "AIzaSyDwGzTPmFg-gjoYtNWNJM47p22NfBugYFA",
         authDomain: "mock-test-1eea6.firebaseapp.com",
@@ -78,21 +96,33 @@
     if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
     const auth = firebase.auth();
-    
+
+    // ==========================================
+    //  Global Variables
+    // ==========================================
     let allData = [];
     let currentUser = null;
     let userResults = {};
+    let currentCategoryItems = []; // Store current items for refresh
 
-    // Auth Logic
+    // ==========================================
+    //  Authentication Logic
+    // ==========================================
     auth.onAuthStateChanged(user => {
         if(user) {
             currentUser = user;
-            document.getElementById('authBtn').innerHTML = `<img src="${user.photoURL}" style="width:25px; border-radius:50%;"> ${user.displayName.split(' ')[0]}`;
-            // Fetch User Results
+            // Show Profile Pic & Name
+            document.getElementById('authBtn').innerHTML = `
+                <img src="${user.photoURL}" style="width:22px; height:22px; border-radius:50%;"> 
+                ${user.displayName.split(' ')[0]}`;
+            
+            // Listen to User Results
             db.ref(`users/${user.uid}/results`).on('value', s => {
                 userResults = s.val() || {};
-                // Refresh list if open
-                if(document.getElementById('sheet').classList.contains('active')) renderList(currentListItems);
+                // If user is inside a folder, refresh the list to show scores
+                if(document.getElementById('sheet').classList.contains('active')) {
+                    renderList(currentCategoryItems);
+                }
             });
         } else {
             currentUser = null;
@@ -103,26 +133,30 @@
 
     function handleAuth() {
         if(!currentUser) {
-            const p = new firebase.auth.GoogleAuthProvider();
-            auth.signInWithPopup(p).catch(e => alert(e.message));
+            const provider = new firebase.auth.GoogleAuthProvider();
+            auth.signInWithPopup(provider).catch(e => alert(e.message));
         } else {
-            if(confirm("Logout?")) auth.signOut();
+            if(confirm("Logout করতে চান?")) auth.signOut();
         }
     }
 
-    // Load Data
-    db.ref('exams').on('value', snapshot => {
+    // ==========================================
+    //  Load Folders (Categories)
+    // ==========================================
+    db.ref('exams').on('value', (snapshot) => {
         const data = snapshot.val();
         const grid = document.getElementById('examGrid');
         grid.innerHTML = "";
-        if(!data) return;
+        
+        if(!data) { grid.innerHTML = "<div style='text-align:center; width:100%; grid-column:span 2;'>কোনো ডেটা নেই</div>"; return; }
         
         allData = Object.values(data);
-        const cats = [...new Set(allData.map(i => i.category))];
+        const uniqueCats = [...new Set(allData.map(item => item.category))];
 
-        cats.forEach(cat => {
+        uniqueCats.forEach(cat => {
             const item = allData.find(d => d.category === cat);
             let icon = item.icon || "https://cdn-icons-png.flaticon.com/512/2995/2995620.png";
+            
             grid.innerHTML += `
                 <div class="box" onclick="openSheet('${cat}')">
                     <img src="${icon}">
@@ -131,89 +165,116 @@
         });
     });
 
-    // Navigation Logic
-    let currentListItems = [];
-
+    // ==========================================
+    //  Folder Navigation & List Rendering
+    // ==========================================
     function openSheet(cat) {
         document.getElementById('sheetTitle').innerText = cat;
         document.getElementById('sheet').classList.add('active');
-        history.pushState(null, null, location.href);
         
-        // Simple logic for demo (filtering by first Tab/Menu)
-        const items = allData.filter(d => d.category === cat);
-        renderList(items); 
+        // Push state for Back Button support
+        window.history.pushState({page: "sheet"}, "", "#"+cat);
+
+        // Filter items for this folder
+        currentCategoryItems = allData.filter(d => d.category === cat);
+        renderList(currentCategoryItems);
     }
 
     function renderList(items) {
-        currentListItems = items;
         const list = document.getElementById('listContainer');
         list.innerHTML = "";
         
         items.forEach(item => {
-            // Extract Quiz ID from Link
+            // 1. Try to find Quiz ID from the link
             let quizId = null;
             try {
-                const url = new URL(item.link, window.location.href);
-                quizId = url.searchParams.get('quiz');
+                const urlObj = new URL(item.link, window.location.href);
+                quizId = urlObj.searchParams.get('quiz');
             } catch(e) {}
 
-            // Check Status
+            // Default Button State
             let btnText = "Start Now";
-            let btnStyle = "";
+            let btnBg = "#00b0ff"; // Blue
             let badge = "";
             let clickAction = `window.location.href='${item.link}'`;
+            let cardBorder = "transparent";
 
-            // 1. Check if Attempted
+            // 2. CHECK: Has user already taken this test?
             if(quizId && userResults[quizId]) {
                 const res = userResults[quizId];
                 btnText = "Re-Attempt";
-                badge = `<div class="attempted-badge">✔ Score: ${res.score}/${res.total}</div>`;
-                btnStyle = "background:#fff; color:#2e7d32; border:1px solid #2e7d32;";
+                btnBg = "#2e7d32"; // Green Button
+                badge = `<div class="badge-score">✔ Your Score: ${res.score}/${res.total}</div>`;
+                cardBorder = "#2e7d32";
             }
 
-            // 2. Check Time (Live Test Logic)
+            // 3. CHECK: Is it a Live Test? (Time Based)
             if (item.startTime && item.endTime) {
                 const now = new Date().getTime();
                 const start = new Date(item.startTime).getTime();
                 const end = new Date(item.endTime).getTime();
 
                 if (now < start) {
+                    // Future
                     btnText = "Coming Soon";
-                    btnStyle = "background:#fbc531;";
-                    clickAction = "alert('Wait for start time!')";
-                    badge = `<div style="color:#e67e22; font-size:0.75rem;">🕒 Starts: ${new Date(item.startTime).toLocaleTimeString()}</div>`;
-                } else if (now > end) {
-                    btnText = "Expired";
-                    btnStyle = "background:#95a5a6;";
-                    clickAction = "alert('Test Ended!')";
-                } else {
+                    btnBg = "#fbc531"; // Yellow
+                    clickAction = `alert('পরীক্ষা শুরু হবে: ${new Date(item.startTime).toLocaleString()}')`;
+                    badge = `<div style="font-size:0.75rem; color:#e67e22;">🕒 Starts: ${new Date(item.startTime).toLocaleTimeString()}</div>`;
+                } 
+                else if (now >= start && now <= end) {
+                    // Live
                     btnText = "🔴 LIVE";
-                    btnStyle = "background:#e74c3c; animation: pulse 1s infinite;";
+                    btnBg = "#e74c3c"; // Red
+                    badge = `<div class="badge-live">● LIVE NOW</div>`;
+                    // Live tests can be attempted
+                } 
+                else {
+                    // Expired
+                    btnText = "Expired";
+                    btnBg = "#95a5a6"; // Grey
+                    clickAction = "alert('এই পরীক্ষার সময় শেষ!')";
+                    badge = `<div style="font-size:0.75rem; color:red;">Ended</div>`;
                 }
             }
 
+            // Render Card
             list.innerHTML += `
-                <div class="test-card">
+                <div class="test-card" style="border-left-color: ${cardBorder}">
                     <div class="card-info">
                         <div class="card-title">${item.chapter}</div>
-                        <div style="font-size:0.8rem; color:#666;">${item.subject}</div>
+                        <div class="card-sub">${item.subject}</div>
                         ${badge}
                     </div>
-                    <button class="start-btn" style="${btnStyle}" onclick="${clickAction}">${btnText}</button>
+                    <button class="start-btn" style="background:${btnBg};" onclick="${clickAction}">
+                        ${btnText}
+                    </button>
                 </div>
             `;
         });
     }
 
+    // ==========================================
+    //  Back Button Logic
+    // ==========================================
     function goBack() {
-        document.getElementById('sheet').classList.remove('active');
+        if(window.history.state) {
+            window.history.back();
+        } else {
+            document.getElementById('sheet').classList.remove('active');
+        }
     }
-    window.onpopstate = goBack;
-</script>
 
-<style>
-@keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.8; } 100% { opacity: 1; } }
-</style>
+    window.onpopstate = function(event) {
+        document.getElementById('sheet').classList.remove('active');
+    };
+
+    // Fullscreen Helper
+    document.addEventListener('click', function() {
+        if (!document.fullscreenElement && document.documentElement.requestFullscreen) {
+            // document.documentElement.requestFullscreen().catch(() => {});
+        }
+    });
+</script>
 
 </body>
 </html>
