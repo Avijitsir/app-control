@@ -9,104 +9,61 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     
     <style>
         :root { --primary: #00b0ff; --bg: #f2f4f8; }
-        body { font-family: 'Inter', sans-serif; background: var(--bg); margin: 0; padding-bottom: 50px; color: #1e293b; user-select: none; -webkit-tap-highlight-color: transparent; overscroll-behavior-y: none; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); margin: 0; padding-bottom: 50px; color: #1e293b; user-select: none; -webkit-tap-highlight-color: transparent; }
         
         /* Header */
         header { background: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
         .logo-text { font-weight: 800; font-size: 1.2rem; color: #4361ee; }
+        .login-btn { font-size: 0.9rem; font-weight: bold; color: var(--primary); cursor: pointer; display: flex; align-items: center; gap: 5px; }
 
         /* Grid */
         .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; padding: 20px; }
-        .box { background: white; padding: 20px; border-radius: 16px; text-align: center; cursor: pointer; display: flex; flex-direction: column; align-items: center; box-shadow: 0 2px 8px rgba(0,0,0,0.03); border: 1px solid white; transition: 0.1s; }
-        .box:active { transform: scale(0.96); background: #f0f9ff; }
+        .box { background: white; padding: 20px; border-radius: 16px; text-align: center; cursor: pointer; display: flex; flex-direction: column; align-items: center; box-shadow: 0 2px 8px rgba(0,0,0,0.03); border: 1px solid white; }
         .box img { width: 50px; height: 50px; margin-bottom: 10px; border-radius: 10px; }
-        .box-title { font-weight: 700; font-size: 0.95rem; }
 
-        /* FULL SCREEN PAGE */
-        .sheet { 
-            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; 
-            background: #f8f9fa; z-index: 99999; 
-            display: flex; flex-direction: column; 
-            transform: translateX(100%); transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-        }
+        /* Full Screen Sheet */
+        .sheet { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #f8f9fa; z-index: 99999; display: flex; flex-direction: column; transform: translateX(100%); transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); }
         .sheet.active { transform: translateX(0); }
-        
-        /* Sheet Header */
         .sheet-header { background: white; padding: 12px 15px; display: flex; align-items: center; gap: 15px; border-bottom: 1px solid #eee; }
-        .back-btn { font-size: 1.2rem; cursor: pointer; padding: 5px; }
         
-        /* Tabs & Menus */
-        .top-tabs { display: flex; gap: 10px; padding: 15px 20px 5px 20px; background: white; }
-        .pill-btn { padding: 6px 16px; border-radius: 20px; font-size: 0.85rem; font-weight: 600; cursor: pointer; border: 1px solid #eee; color: #64748b; }
-        .pill-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
-
-        .tabs-wrapper { background: white; padding-bottom: 0px; box-shadow: 0 4px 5px rgba(0,0,0,0.02); }
-        .tabs { display: flex; gap: 20px; overflow-x: auto; padding: 10px 20px 0 20px; scrollbar-width: none; border-bottom: 1px solid #f0f0f0; }
-        .tab-link { font-size: 0.9rem; font-weight: 600; color: #64748b; white-space: nowrap; cursor: pointer; padding-bottom: 10px; border-bottom: 3px solid transparent; }
-        .tab-link.active { color: var(--primary); border-bottom-color: var(--primary); }
-        
-        .sub-filters { display: flex; gap: 8px; overflow-x: auto; padding: 15px 20px 5px 20px; scrollbar-width: none; display: none; }
-        .chip { background: white; padding: 5px 12px; border-radius: 6px; font-size: 0.8rem; color: #555; border: 1px solid #ddd; cursor: pointer; white-space: nowrap; }
-        .chip.active { background: #333; color: white; border-color: #333; }
-
-        /* List */
+        /* Lists */
         .list { overflow-y: auto; flex-grow: 1; padding: 15px 20px 80px 20px; }
         .test-card { background: white; padding: 15px; border-radius: 10px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.03); }
+        .card-info { flex-grow: 1; }
         .card-title { font-weight: 700; font-size: 0.95rem; }
-        .start-btn { background: var(--primary); color: white; border: none; padding: 8px 15px; border-radius: 5px; font-weight: bold; cursor: pointer; text-decoration: none; font-size: 0.85rem; }
+        .start-btn { background: var(--primary); color: white; border: none; padding: 8px 15px; border-radius: 5px; font-weight: bold; cursor: pointer; font-size: 0.85rem; text-decoration: none; }
+        
+        .attempted-badge { background: #e8f5e9; color: #2e7d32; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; margin-top: 5px; display: inline-block; }
     </style>
 </head>
 <body>
 
 <header>
     <span class="logo-text">Exam Portal</span>
-    <i class="fas fa-expand" onclick="toggleFullScreen()" style="color:#333; cursor:pointer;"></i>
+    <div id="authBtn" class="login-btn" onclick="handleAuth()">
+        <i class="fas fa-user-circle"></i> Login
+    </div>
 </header>
 
-<div class="grid" id="examGrid">
-    <div style="grid-column:span 2; text-align:center; margin-top:50px; color:#888;">লোডিং হচ্ছে...</div>
-</div>
+<div class="grid" id="examGrid">Loading...</div>
 
 <div class="sheet" id="sheet">
     <div class="sheet-header">
-        <i class="fas fa-arrow-left back-btn" onclick="goBack()"></i>
-        <span style="font-weight:bold; font-size:1.1rem; flex-grow:1;" id="sheetTitle">Exam Name</span>
+        <i class="fas fa-arrow-left" onclick="goBack()" style="font-size:1.2rem; cursor:pointer;"></i>
+        <span style="font-weight:bold; font-size:1.1rem; flex-grow:1;" id="sheetTitle">Exam</span>
     </div>
-    <div class="top-tabs" id="topTabsContainer"></div>
-    <div class="tabs-wrapper">
-        <div class="tabs" id="mainMenuContainer"></div>
-    </div>
-    <div class="sub-filters" id="subFilterContainer"></div>
+    <div id="topTabsContainer" style="padding:10px 20px; background:white; display:flex; gap:10px;"></div>
+    <div id="mainMenuContainer" style="padding:0 20px; background:white; border-bottom:1px solid #eee; display:flex; gap:20px; overflow-x:auto;"></div>
     <div class="list" id="listContainer"></div>
 </div>
 
 <script>
-    // ==========================================
-    //  🚀 RE-TRIGGER FULL SCREEN LOGIC
-    // ==========================================
-    function triggerFullScreen() {
-        const elem = document.documentElement;
-        if (!document.fullscreenElement) {
-            if (elem.requestFullscreen) {
-                elem.requestFullscreen().catch(() => {});
-            } else if (elem.webkitRequestFullscreen) {
-                elem.webkitRequestFullscreen();
-            }
-        }
-    }
-
-    function toggleFullScreen() {
-        if (!document.fullscreenElement) triggerFullScreen();
-        else if (document.exitFullscreen) document.exitFullscreen();
-    }
-
-    // ==========================================
-    //  Firebase & App Logic
-    // ==========================================
+    // Firebase Config
     const firebaseConfig = {
         apiKey: "AIzaSyDwGzTPmFg-gjoYtNWNJM47p22NfBugYFA",
         authDomain: "mock-test-1eea6.firebaseapp.com",
@@ -118,145 +75,145 @@
         measurementId: "G-5RLWPTP8YD"
     };
 
-    if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
+    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
+    const auth = firebase.auth();
+    
     let allData = [];
+    let currentUser = null;
+    let userResults = {};
+
+    // Auth Logic
+    auth.onAuthStateChanged(user => {
+        if(user) {
+            currentUser = user;
+            document.getElementById('authBtn').innerHTML = `<img src="${user.photoURL}" style="width:25px; border-radius:50%;"> ${user.displayName.split(' ')[0]}`;
+            // Fetch User Results
+            db.ref(`users/${user.uid}/results`).on('value', s => {
+                userResults = s.val() || {};
+                // Refresh list if open
+                if(document.getElementById('sheet').classList.contains('active')) renderList(currentListItems);
+            });
+        } else {
+            currentUser = null;
+            userResults = {};
+            document.getElementById('authBtn').innerHTML = `<i class="fas fa-user-circle"></i> Login`;
+        }
+    });
+
+    function handleAuth() {
+        if(!currentUser) {
+            const p = new firebase.auth.GoogleAuthProvider();
+            auth.signInWithPopup(p).catch(e => alert(e.message));
+        } else {
+            if(confirm("Logout?")) auth.signOut();
+        }
+    }
 
     // Load Data
-    db.ref('exams').on('value', (snapshot) => {
+    db.ref('exams').on('value', snapshot => {
         const data = snapshot.val();
         const grid = document.getElementById('examGrid');
         grid.innerHTML = "";
-        if(!data) { grid.innerHTML = "<div style='text-align:center; width:100%; grid-column:span 2;'>কোনো ডেটা নেই</div>"; return; }
+        if(!data) return;
         
         allData = Object.values(data);
-        const uniqueExams = [...new Set(allData.map(item => item.category))];
+        const cats = [...new Set(allData.map(i => i.category))];
 
-        uniqueExams.forEach(cat => {
+        cats.forEach(cat => {
             const item = allData.find(d => d.category === cat);
             let icon = item.icon || "https://cdn-icons-png.flaticon.com/512/2995/2995620.png";
-            
             grid.innerHTML += `
-                <div class="box" onclick="handleBoxClick('${cat}')">
+                <div class="box" onclick="openSheet('${cat}')">
                     <img src="${icon}">
                     <div class="box-title">${cat}</div>
                 </div>`;
         });
     });
 
-    // --- CLICK HANDLER (ALWAYS RE-TRIGGERS FULLSCREEN) ---
-    function handleBoxClick(cat) {
-        // 1. Force Fullscreen Again (Browser allows this because it's inside a 'click' event)
-        triggerFullScreen();
-        
-        // 2. Open Sheet & Add History State
-        openSheet(cat);
-        
-        // 3. Push History (To handle Mobile Back Button)
-        window.history.pushState({page: "sheet"}, "", "#"+cat);
-    }
-
-    // --- NAVIGATION ---
-    let currentExam = "";
-    let currentTopTab = "";
-    let currentMenu = "";
+    // Navigation Logic
+    let currentListItems = [];
 
     function openSheet(cat) {
-        currentExam = cat;
         document.getElementById('sheetTitle').innerText = cat;
         document.getElementById('sheet').classList.add('active');
+        history.pushState(null, null, location.href);
         
-        const examData = allData.filter(d => d.category === cat);
-        const topTabs = [...new Set(examData.map(d => d.topTab || "Mock Tests"))]; 
-        
-        const topCont = document.getElementById('topTabsContainer');
-        topCont.innerHTML = "";
-        
-        topTabs.forEach((tab, idx) => {
-            topCont.innerHTML += `<div class="pill-btn ${idx===0?'active':''}" onclick="selectTopTab('${tab}', this)">${tab}</div>`;
-        });
-
-        if(topTabs.length > 0) selectTopTab(topTabs[0], document.querySelector('.pill-btn'));
-    }
-
-    function selectTopTab(tab, el) {
-        currentTopTab = tab;
-        document.querySelectorAll('.pill-btn').forEach(b => b.classList.remove('active'));
-        if(el) el.classList.add('active');
-
-        const filtered = allData.filter(d => d.category === currentExam && (d.topTab || "Mock Tests") === tab);
-        const menus = [...new Set(filtered.map(d => d.subject))];
-
-        const menuCont = document.getElementById('mainMenuContainer');
-        menuCont.innerHTML = "";
-        
-        menus.forEach((m, idx) => {
-            menuCont.innerHTML += `<div class="tab-link ${idx===0?'active':''}" onclick="selectMenu('${m}', this)">${m}</div>`;
-        });
-
-        if(menus.length > 0) selectMenu(menus[0], document.querySelector('.tab-link'));
-        else document.getElementById('listContainer').innerHTML = "<div style='text-align:center; margin-top:20px;'>No Content</div>";
-    }
-
-    function selectMenu(menu, el) {
-        currentMenu = menu;
-        document.querySelectorAll('.tab-link').forEach(b => b.classList.remove('active'));
-        if(el) el.classList.add('active');
-
-        const filtered = allData.filter(d => d.category === currentExam && (d.topTab || "Mock Tests") === currentTopTab && d.subject === menu);
-        const subFilters = [...new Set(filtered.map(d => d.subFilter).filter(s => s))];
-        const subCont = document.getElementById('subFilterContainer');
-        subCont.innerHTML = "";
-
-        if (subFilters.length > 0) {
-            subCont.style.display = 'flex';
-            subCont.innerHTML = `<div class="chip active" onclick="selectSub('ALL', this)">All</div>`;
-            subFilters.forEach(sub => {
-                subCont.innerHTML += `<div class="chip" onclick="selectSub('${sub}', this)">${sub}</div>`;
-            });
-            selectSub('ALL', document.querySelector('.chip'));
-        } else {
-            subCont.style.display = 'none';
-            renderList(filtered);
-        }
-    }
-
-    function selectSub(sub, el) {
-        document.querySelectorAll('.chip').forEach(b => b.classList.remove('active'));
-        if(el) el.classList.add('active');
-        let filtered = allData.filter(d => d.category === currentExam && (d.topTab || "Mock Tests") === currentTopTab && d.subject === currentMenu);
-        if (sub !== 'ALL') filtered = filtered.filter(d => d.subFilter === sub);
-        renderList(filtered);
+        // Simple logic for demo (filtering by first Tab/Menu)
+        const items = allData.filter(d => d.category === cat);
+        renderList(items); 
     }
 
     function renderList(items) {
+        currentListItems = items;
         const list = document.getElementById('listContainer');
         list.innerHTML = "";
+        
         items.forEach(item => {
+            // Extract Quiz ID from Link
+            let quizId = null;
+            try {
+                const url = new URL(item.link, window.location.href);
+                quizId = url.searchParams.get('quiz');
+            } catch(e) {}
+
+            // Check Status
+            let btnText = "Start Now";
+            let btnStyle = "";
+            let badge = "";
+            let clickAction = `window.location.href='${item.link}'`;
+
+            // 1. Check if Attempted
+            if(quizId && userResults[quizId]) {
+                const res = userResults[quizId];
+                btnText = "Re-Attempt";
+                badge = `<div class="attempted-badge">✔ Score: ${res.score}/${res.total}</div>`;
+                btnStyle = "background:#fff; color:#2e7d32; border:1px solid #2e7d32;";
+            }
+
+            // 2. Check Time (Live Test Logic)
+            if (item.startTime && item.endTime) {
+                const now = new Date().getTime();
+                const start = new Date(item.startTime).getTime();
+                const end = new Date(item.endTime).getTime();
+
+                if (now < start) {
+                    btnText = "Coming Soon";
+                    btnStyle = "background:#fbc531;";
+                    clickAction = "alert('Wait for start time!')";
+                    badge = `<div style="color:#e67e22; font-size:0.75rem;">🕒 Starts: ${new Date(item.startTime).toLocaleTimeString()}</div>`;
+                } else if (now > end) {
+                    btnText = "Expired";
+                    btnStyle = "background:#95a5a6;";
+                    clickAction = "alert('Test Ended!')";
+                } else {
+                    btnText = "🔴 LIVE";
+                    btnStyle = "background:#e74c3c; animation: pulse 1s infinite;";
+                }
+            }
+
             list.innerHTML += `
                 <div class="test-card">
-                    <div>
+                    <div class="card-info">
                         <div class="card-title">${item.chapter}</div>
                         <div style="font-size:0.8rem; color:#666;">${item.subject}</div>
+                        ${badge}
                     </div>
-                    <a href="${item.link}" class="start-btn">Start</a>
+                    <button class="start-btn" style="${btnStyle}" onclick="${clickAction}">${btnText}</button>
                 </div>
             `;
         });
     }
 
-    // --- HANDLE BACK BUTTON (MOBILE) ---
     function goBack() {
-        window.history.back(); // This triggers 'popstate'
-    }
-
-    window.onpopstate = function(event) {
-        // When Back Button is pressed, Close the Sheet
         document.getElementById('sheet').classList.remove('active');
-        // Optional: Keep fullscreen if preferred, or browser might exit it automatically.
-    };
-
+    }
+    window.onpopstate = goBack;
 </script>
+
+<style>
+@keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.8; } 100% { opacity: 1; } }
+</style>
 
 </body>
 </html>
