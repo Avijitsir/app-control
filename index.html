@@ -13,51 +13,34 @@
     
     <style>
         :root { --primary: #00b0ff; --bg: #f2f4f8; }
-        body { font-family: 'Inter', sans-serif; background: var(--bg); margin: 0; padding-bottom: 50px; color: #1e293b; user-select: none; -webkit-tap-highlight-color: transparent; overscroll-behavior-y: none; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); margin: 0; padding-bottom: 50px; color: #1e293b; user-select: none; -webkit-tap-highlight-color: transparent; }
         
-        /* Header */
         header { background: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
         .logo-text { font-weight: 800; font-size: 1.2rem; color: #4361ee; }
 
-        /* Grid */
         .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; padding: 20px; }
-        .box { background: white; padding: 20px; border-radius: 16px; text-align: center; cursor: pointer; display: flex; flex-direction: column; align-items: center; box-shadow: 0 2px 8px rgba(0,0,0,0.03); border: 1px solid white; transition: 0.1s; }
+        .box { background: white; padding: 20px; border-radius: 16px; text-align: center; cursor: pointer; display: flex; flex-direction: column; align-items: center; box-shadow: 0 2px 8px rgba(0,0,0,0.03); border: 1px solid white; transition: 0.1s; position: relative; }
         .box:active { transform: scale(0.96); background: #f0f9ff; }
         .box img { width: 50px; height: 50px; margin-bottom: 10px; border-radius: 10px; }
         .box-title { font-weight: 700; font-size: 0.95rem; }
+        
+        /* LOCK OVERLAY */
+        .box.locked { opacity: 0.7; filter: grayscale(100%); pointer-events: none; } /* Visual disable */
+        .lock-icon { position: absolute; top: 10px; right: 10px; font-size: 1.2rem; color: #e74c3c; background: white; border-radius: 50%; padding: 5px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
 
-        /* FULL SCREEN PAGE */
-        .sheet { 
-            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; 
-            background: #f8f9fa; z-index: 99999; 
-            display: flex; flex-direction: column; 
-            transform: translateX(100%); transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-        }
+        .sheet { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #f8f9fa; z-index: 99999; display: flex; flex-direction: column; transform: translateX(100%); transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); }
         .sheet.active { transform: translateX(0); }
         
-        /* Sheet Header */
         .sheet-header { background: white; padding: 12px 15px; display: flex; align-items: center; gap: 15px; border-bottom: 1px solid #eee; }
         .back-btn { font-size: 1.2rem; cursor: pointer; padding: 5px; }
         
-        /* Tabs & Menus */
-        .top-tabs { display: flex; gap: 10px; padding: 15px 20px 5px 20px; background: white; }
-        .pill-btn { padding: 6px 16px; border-radius: 20px; font-size: 0.85rem; font-weight: 600; cursor: pointer; border: 1px solid #eee; color: #64748b; }
-        .pill-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
+        .top-tabs, .tabs, .sub-filters { display: flex; gap: 10px; overflow-x: auto; padding: 10px 20px; scrollbar-width: none; background: white; }
+        .pill-btn, .tab-link, .chip { padding: 6px 16px; border-radius: 20px; font-size: 0.85rem; cursor: pointer; border: 1px solid #eee; white-space: nowrap; }
+        .active { background: var(--primary); color: white; border-color: var(--primary); }
 
-        .tabs-wrapper { background: white; padding-bottom: 0px; box-shadow: 0 4px 5px rgba(0,0,0,0.02); }
-        .tabs { display: flex; gap: 20px; overflow-x: auto; padding: 10px 20px 0 20px; scrollbar-width: none; border-bottom: 1px solid #f0f0f0; }
-        .tab-link { font-size: 0.9rem; font-weight: 600; color: #64748b; white-space: nowrap; cursor: pointer; padding-bottom: 10px; border-bottom: 3px solid transparent; }
-        .tab-link.active { color: var(--primary); border-bottom-color: var(--primary); }
-        
-        .sub-filters { display: flex; gap: 8px; overflow-x: auto; padding: 15px 20px 5px 20px; scrollbar-width: none; display: none; }
-        .chip { background: white; padding: 5px 12px; border-radius: 6px; font-size: 0.8rem; color: #555; border: 1px solid #ddd; cursor: pointer; white-space: nowrap; }
-        .chip.active { background: #333; color: white; border-color: #333; }
-
-        /* List */
-        .list { overflow-y: auto; flex-grow: 1; padding: 15px 20px 80px 20px; }
+        .list { overflow-y: auto; flex-grow: 1; padding: 15px; }
         .test-card { background: white; padding: 15px; border-radius: 10px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.03); }
-        .card-title { font-weight: 700; font-size: 0.95rem; }
-        .start-btn { background: var(--primary); color: white; border: none; padding: 8px 15px; border-radius: 5px; font-weight: bold; cursor: pointer; text-decoration: none; font-size: 0.85rem; }
+        .start-btn { background: var(--primary); color: white; text-decoration: none; padding: 8px 15px; border-radius: 5px; font-size: 0.85rem; }
     </style>
 </head>
 <body>
@@ -74,39 +57,23 @@
 <div class="sheet" id="sheet">
     <div class="sheet-header">
         <i class="fas fa-arrow-left back-btn" onclick="goBack()"></i>
-        <span style="font-weight:bold; font-size:1.1rem; flex-grow:1;" id="sheetTitle">Exam Name</span>
+        <span style="font-weight:bold; font-size:1.1rem; flex-grow:1;" id="sheetTitle">Folder</span>
     </div>
     <div class="top-tabs" id="topTabsContainer"></div>
-    <div class="tabs-wrapper">
-        <div class="tabs" id="mainMenuContainer"></div>
-    </div>
-    <div class="sub-filters" id="subFilterContainer"></div>
+    <div class="tabs" id="mainMenuContainer"></div>
+    <div class="sub-filters" id="subFilterContainer" style="display:none;"></div>
     <div class="list" id="listContainer"></div>
 </div>
 
 <script>
-    // ==========================================
-    //  🚀 RE-TRIGGER FULL SCREEN LOGIC
-    // ==========================================
     function triggerFullScreen() {
         const elem = document.documentElement;
-        if (!document.fullscreenElement) {
-            if (elem.requestFullscreen) {
-                elem.requestFullscreen().catch(() => {});
-            } else if (elem.webkitRequestFullscreen) {
-                elem.webkitRequestFullscreen();
-            }
-        }
+        if (!document.fullscreenElement && elem.requestFullscreen) elem.requestFullscreen().catch(() => {});
     }
-
     function toggleFullScreen() {
-        if (!document.fullscreenElement) triggerFullScreen();
-        else if (document.exitFullscreen) document.exitFullscreen();
+        if (!document.fullscreenElement) triggerFullScreen(); else document.exitFullscreen();
     }
 
-    // ==========================================
-    //  Firebase & App Logic
-    // ==========================================
     const firebaseConfig = {
         apiKey: "AIzaSyDwGzTPmFg-gjoYtNWNJM47p22NfBugYFA",
         authDomain: "mock-test-1eea6.firebaseapp.com",
@@ -121,45 +88,58 @@
     if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
     const db = firebase.database();
     let allData = [];
+    let lockedCategories = {};
 
-    // Load Data
+    // 1. FETCH LOCKS FIRST
+    db.ref('category_locks').on('value', snap => {
+        lockedCategories = snap.val() || {};
+        renderGrid(); // Re-render if locks change
+    });
+
+    // 2. FETCH EXAMS
     db.ref('exams').on('value', (snapshot) => {
         const data = snapshot.val();
+        if(!data) { document.getElementById('examGrid').innerHTML = "No Data"; return; }
+        allData = Object.values(data);
+        renderGrid();
+    });
+
+    function renderGrid() {
         const grid = document.getElementById('examGrid');
         grid.innerHTML = "";
-        if(!data) { grid.innerHTML = "<div style='text-align:center; width:100%; grid-column:span 2;'>কোনো ডেটা নেই</div>"; return; }
         
-        allData = Object.values(data);
+        if (allData.length === 0) return;
+
         const uniqueExams = [...new Set(allData.map(item => item.category))];
 
         uniqueExams.forEach(cat => {
             const item = allData.find(d => d.category === cat);
             let icon = item.icon || "https://cdn-icons-png.flaticon.com/512/2995/2995620.png";
             
+            // Check Lock
+            const isLocked = lockedCategories[cat] === true;
+            const lockHtml = isLocked ? `<i class="fas fa-lock lock-icon"></i>` : "";
+            const lockClass = isLocked ? "locked" : "";
+            const clickAction = isLocked ? `onclick="alert('🔒 এই ফোল্ডারটি বর্তমানে বন্ধ আছে!')"` : `onclick="handleBoxClick('${cat}')"`;
+
+            // Note: I removed pointer-events:none from CSS to allow alert click, handled logic here
             grid.innerHTML += `
-                <div class="box" onclick="handleBoxClick('${cat}')">
-                    <img src="${icon}">
+                <div class="box" ${clickAction} style="${isLocked ? 'opacity:0.8;' : ''}">
+                    ${lockHtml}
+                    <img src="${icon}" style="${isLocked ? 'filter:grayscale(100%)' : ''}">
                     <div class="box-title">${cat}</div>
                 </div>`;
         });
-    });
+    }
 
-    // --- CLICK HANDLER (ALWAYS RE-TRIGGERS FULLSCREEN) ---
     function handleBoxClick(cat) {
-        // 1. Force Fullscreen Again (Browser allows this because it's inside a 'click' event)
         triggerFullScreen();
-        
-        // 2. Open Sheet & Add History State
         openSheet(cat);
-        
-        // 3. Push History (To handle Mobile Back Button)
         window.history.pushState({page: "sheet"}, "", "#"+cat);
     }
 
-    // --- NAVIGATION ---
-    let currentExam = "";
-    let currentTopTab = "";
-    let currentMenu = "";
+    // --- NAVIGATION LOGIC ---
+    let currentExam = "", currentTopTab = "", currentMenu = "";
 
     function openSheet(cat) {
         currentExam = cat;
@@ -171,11 +151,9 @@
         
         const topCont = document.getElementById('topTabsContainer');
         topCont.innerHTML = "";
-        
         topTabs.forEach((tab, idx) => {
             topCont.innerHTML += `<div class="pill-btn ${idx===0?'active':''}" onclick="selectTopTab('${tab}', this)">${tab}</div>`;
         });
-
         if(topTabs.length > 0) selectTopTab(topTabs[0], document.querySelector('.pill-btn'));
     }
 
@@ -183,17 +161,13 @@
         currentTopTab = tab;
         document.querySelectorAll('.pill-btn').forEach(b => b.classList.remove('active'));
         if(el) el.classList.add('active');
-
         const filtered = allData.filter(d => d.category === currentExam && (d.topTab || "Mock Tests") === tab);
         const menus = [...new Set(filtered.map(d => d.subject))];
-
         const menuCont = document.getElementById('mainMenuContainer');
         menuCont.innerHTML = "";
-        
         menus.forEach((m, idx) => {
             menuCont.innerHTML += `<div class="tab-link ${idx===0?'active':''}" onclick="selectMenu('${m}', this)">${m}</div>`;
         });
-
         if(menus.length > 0) selectMenu(menus[0], document.querySelector('.tab-link'));
         else document.getElementById('listContainer').innerHTML = "<div style='text-align:center; margin-top:20px;'>No Content</div>";
     }
@@ -202,18 +176,14 @@
         currentMenu = menu;
         document.querySelectorAll('.tab-link').forEach(b => b.classList.remove('active'));
         if(el) el.classList.add('active');
-
         const filtered = allData.filter(d => d.category === currentExam && (d.topTab || "Mock Tests") === currentTopTab && d.subject === menu);
         const subFilters = [...new Set(filtered.map(d => d.subFilter).filter(s => s))];
         const subCont = document.getElementById('subFilterContainer');
         subCont.innerHTML = "";
-
         if (subFilters.length > 0) {
             subCont.style.display = 'flex';
             subCont.innerHTML = `<div class="chip active" onclick="selectSub('ALL', this)">All</div>`;
-            subFilters.forEach(sub => {
-                subCont.innerHTML += `<div class="chip" onclick="selectSub('${sub}', this)">${sub}</div>`;
-            });
+            subFilters.forEach(sub => subCont.innerHTML += `<div class="chip" onclick="selectSub('${sub}', this)">${sub}</div>`);
             selectSub('ALL', document.querySelector('.chip'));
         } else {
             subCont.style.display = 'none';
@@ -240,22 +210,12 @@
                         <div style="font-size:0.8rem; color:#666;">${item.subject}</div>
                     </div>
                     <a href="${item.link}" class="start-btn">Start</a>
-                </div>
-            `;
+                </div>`;
         });
     }
 
-    // --- HANDLE BACK BUTTON (MOBILE) ---
-    function goBack() {
-        window.history.back(); // This triggers 'popstate'
-    }
-
-    window.onpopstate = function(event) {
-        // When Back Button is pressed, Close the Sheet
-        document.getElementById('sheet').classList.remove('active');
-        // Optional: Keep fullscreen if preferred, or browser might exit it automatically.
-    };
-
+    function goBack() { window.history.back(); }
+    window.onpopstate = () => document.getElementById('sheet').classList.remove('active');
 </script>
 
 </body>
