@@ -184,6 +184,7 @@
         
         allData = Object.entries(data).map(([k, v]) => Object.assign({ _key: k }, v));
         const uniqueExams = orderedNames(allData, d => d.category, 'catOrder');
+        setTimeout(restoreNav, 0);
 
         uniqueExams.forEach(cat => {
             const catItems = allData.filter(d => d.category === cat);
@@ -219,7 +220,7 @@
     }
 
     // --- NAVIGATION ---
-    let currentExam = "", currentTopTab = "", currentMenu = "";
+    let currentExam = "", currentTopTab = "", currentMenu = "", currentSub = "";
 
     function openSheet(cat) {
         currentExam = cat;
@@ -268,6 +269,7 @@
         const subCont = document.getElementById('subFilterContainer');
         subCont.innerHTML = "";
 
+        currentSub = "";
         if (subFilters.length > 0) {
             subCont.style.display = 'flex';
             // "All" বোতাম নেই: প্রথম সাব-ফিল্টারটাই নিজে থেকে খোলা থাকে
@@ -284,6 +286,7 @@
     }
 
     function selectSub(sub, el) {
+        currentSub = sub;
         document.querySelectorAll('.chip').forEach(b => b.classList.remove('active'));
         if(el) el.classList.add('active');
         let filtered = orderedItems(allData.filter(d => d.category === currentExam && (d.topTab || "Mock Tests") === currentTopTab && d.subject === currentMenu));
@@ -292,21 +295,58 @@
         renderList(filtered);
     }
 
+    // এই ফোনে এই কুইজের সেভ করা অবস্থা: 'done' (ফল দেখা যাবে) / 'run' (চলছিল) / ''
+    function attemptStatus(link) {
+        try {
+            const id = new URL(link, location.href).searchParams.get('id');
+            if (!id) return '';
+            const st = JSON.parse(localStorage.getItem('exam_state_' + id) || 'null');
+            if (!st || !st.savedAt || Date.now() - st.savedAt > 24 * 3600 * 1000) return '';
+            return st.submitted ? 'done' : 'run';
+        } catch (e) { return ''; }
+    }
+
     function renderList(items) {
         const list = document.getElementById('listContainer');
         list.innerHTML = "";
         items.forEach(item => {
+            const st = attemptStatus(item.link);
+            let btn = `<a href="${item.link}" class="start-btn">Start</a>`;
+            if (st === 'done') btn = `<a href="${item.link}" class="start-btn" style="background:#00a86b;">📊 ফলাফল</a>`;
+            else if (st === 'run') btn = `<a href="${item.link}" class="start-btn" style="background:#f59e0b;">▶ চালিয়ে যান</a>`;
             list.innerHTML += `
                 <div class="test-card">
                     <div>
                         <div class="card-title">${item.chapter}</div>
                         <div style="font-size:0.8rem; color:#666;">${item.subject}</div>
                     </div>
-                    <a href="${item.link}" class="start-btn">Start</a>
+                    ${btn}
                 </div>
             `;
         });
     }
+
+    // --- পরীক্ষা থেকে ফিরলে ঠিক যে মেনু থেকে শুরু করেছিলেন সেখানেই ফেরা ---
+    document.getElementById('listContainer').addEventListener('click', function (e) {
+        if (!e.target.closest('a.start-btn')) return;
+        try { localStorage.setItem('portal_return', JSON.stringify({ cat: currentExam, tab: currentTopTab, menu: currentMenu, sub: currentSub, t: Date.now() })); } catch (err) {}
+    });
+    let navRestored = false;
+    function restoreNav() {
+        if (navRestored) return; navRestored = true;
+        let r = null;
+        try { r = JSON.parse(localStorage.getItem('portal_return') || 'null'); localStorage.removeItem('portal_return'); } catch (e) {}
+        if (!r || !r.cat || Date.now() - r.t > 12 * 3600 * 1000) return;
+        const items = allData.filter(d => d.category === r.cat);
+        if (!items.length || items.some(i => i.locked === true)) return;
+        const pick = (sel, text) => Array.from(document.querySelectorAll(sel)).find(e => e.textContent.trim() === text);
+        openSheet(r.cat);
+        const t = pick('.pill-btn', r.tab); if (t) selectTopTab(r.tab, t);
+        const m = pick('.tab-link', r.menu); if (m) selectMenu(r.menu, m);
+        if (r.sub) { const sb = pick('.chip', r.sub === '__NONE__' ? 'অন্যান্য' : r.sub); if (sb) selectSub(r.sub, sb); }
+    }
+    // ব্রাউজার পুরনো পেজ ক্যাশ থেকে খুললে নতুন করে সাজিয়ে নেয় (ফলাফল বোতাম হালনাগাদ হয়)
+    window.addEventListener('pageshow', function (e) { if (e.persisted) location.reload(); });
 
     // --- HANDLE BACK BUTTON ---
     history.pushState(null, document.title, location.href);
