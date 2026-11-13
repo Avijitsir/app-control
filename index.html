@@ -176,8 +176,8 @@
     }
 
     // Load Data
-    db.ref('exams').on('value', (snapshot) => {
-        const data = snapshot.val();
+    // আগের বার দেখা তালিকা ফোনে জমানো থাকে: পোর্টাল খুলতেই সঙ্গে সঙ্গে দেখায়, নতুন ডেটা এলে বদলে নেয়
+    function applyData(data) {
         const grid = document.getElementById('examGrid');
         grid.innerHTML = "";
         if(!data) { grid.innerHTML = "<div style='text-align:center; width:100%; grid-column:span 2;'>কোনো ডেটা নেই</div>"; return; }
@@ -201,6 +201,12 @@
                     <i class="fas fa-lock lock-icon"></i>
                 </div>`;
         });
+    }
+    try { const cached = JSON.parse(localStorage.getItem('exams_cache') || 'null'); if (cached) applyData(cached); } catch (e) {}
+    db.ref('exams').on('value', (snapshot) => {
+        const data = snapshot.val();
+        try { localStorage.setItem('exams_cache', JSON.stringify(data)); } catch (e) {}
+        applyData(data);
     });
 
     // --- CLICK HANDLER ---
