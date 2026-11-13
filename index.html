@@ -79,7 +79,12 @@
         .test-card { background: white; padding: 15px; border-radius: 10px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.03); }
         .card-title { font-weight: 700; font-size: 0.95rem; }
         .start-btn { background: var(--primary); color: white; border: none; padding: 8px 15px; border-radius: 5px; font-weight: bold; cursor: pointer; text-decoration: none; font-size: 0.85rem; }
-    </style>
+    
+        /* লোডিং: লেখার বদলে রঙিন ঝিকমিক বাক্স */
+        .sk-box { height: 110px; border-radius: 16px; background: linear-gradient(110deg, #e0e7ff 8%, #fce7f3 28%, #dcfce7 48%, #fef3c7 68%, #e0e7ff 88%); background-size: 300% 100%; animation: skShimmer 1.6s ease-in-out infinite; }
+        .sk-box:nth-child(2n) { animation-delay: .2s; } .sk-box:nth-child(3n) { animation-delay: .4s; }
+        @keyframes skShimmer { 0% { background-position: 100% 0; } 100% { background-position: -100% 0; } }
+</style>
 </head>
 <body>
 
@@ -89,7 +94,7 @@
 </header>
 
 <div class="grid" id="examGrid">
-    <div style="grid-column:span 2; text-align:center; margin-top:50px; color:#888;">লোডিং হচ্ছে...</div>
+    <div class="sk-box"></div><div class="sk-box"></div><div class="sk-box"></div><div class="sk-box"></div><div class="sk-box"></div><div class="sk-box"></div>
 </div>
 
 <div class="sheet" id="sheet">
