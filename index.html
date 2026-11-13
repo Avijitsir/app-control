@@ -321,13 +321,24 @@
         renderList(filtered);
     }
 
+    // মেয়াদ পেরোনো পুরনো সেভ মুছে ফোনের জায়গা পরিষ্কার রাখা
+    (function prune() {
+        try {
+            for (let i = localStorage.length - 1; i >= 0; i--) {
+                const k = localStorage.key(i);
+                if (!k || k.indexOf('exam_state_') !== 0) continue;
+                let st = null; try { st = JSON.parse(localStorage.getItem(k)); } catch (e) {}
+                if (!st || !st.savedAt || Date.now() - st.savedAt > (st.submitted ? 90 : 1) * 24 * 3600 * 1000) localStorage.removeItem(k);
+            }
+        } catch (e) {}
+    })();
     // এই ফোনে এই কুইজের সেভ করা অবস্থা: null / {state:'run',...} / {state:'done',...}
     function attemptInfo(link) {
         try {
             const id = new URL(link, location.href).searchParams.get('id');
             if (!id) return null;
             const st = JSON.parse(localStorage.getItem('exam_state_' + id) || 'null');
-            if (!st || !st.savedAt || Date.now() - st.savedAt > 24 * 3600 * 1000 || !st.questions) return null;
+            if (!st || !st.savedAt || Date.now() - st.savedAt > (st.submitted ? 90 : 1) * 24 * 3600 * 1000 || !st.questions) return null;
             const qs = st.settings || st.quizSettings || {};
             const pos = Number(qs.posMark) || 1, neg = Number(qs.negMark) || 0, pass = Number(qs.passMark) || 0;
             const n = st.questions.length, total = +(n * pos).toFixed(2);
@@ -338,7 +349,7 @@
                 return { state: 'done', score, total, pass, c, w, date: new Date(st.savedAt) };
             }
             const left = st.isPaused ? (st.timeLeft || 0) : Math.max(0, Math.round((st.endTime - Date.now()) / 1000));
-            return { state: 'run', n, total, mins: Math.ceil(left / 60) };
+            return { state: 'run', n, total, mins: Math.ceil(left / 60), ts: st.savedAt };
         } catch (e) { return null; }
     }
     // লিংকের সঙ্গে ছোট নির্দেশ জোড়া (যেমন view=solution, retake=1)
@@ -350,12 +361,30 @@
     function renderList(items) {
         const list = document.getElementById('listContainer');
         list.innerHTML = "";
-        items.forEach(item => {
-            const info = attemptInfo(item.link);
+        // স্মার্ট ক্রম: অসমাপ্ত পরীক্ষা সবার ওপরে; না থাকলে, শেষ করা পরীক্ষার পরের পরীক্ষাটা ওপরে
+        const infos = items.map(it => attemptInfo(it.link));
+        let nextIdx = -1;
+        const runIdx = items.map((_, i) => i).filter(i => infos[i] && infos[i].state === 'run').sort((a, b) => infos[b].ts - infos[a].ts);
+        let order = items.map((_, i) => i);
+        if (runIdx.length) {
+            order = runIdx.concat(order.filter(i => runIdx.indexOf(i) < 0));
+        } else {
+            let last = -1, lastT = 0;
+            infos.forEach((f, i) => { if (f && f.state === 'done' && f.date.getTime() >= lastT) { last = i; lastT = f.date.getTime(); } });
+            if (last >= 0) {
+                for (let i = last + 1; i < items.length; i++) { if (!infos[i]) { nextIdx = i; break; } }
+                if (nextIdx < 0) { for (let i = 0; i < last; i++) { if (!infos[i]) { nextIdx = i; break; } } }
+            }
+            if (nextIdx >= 0) order = [nextIdx].concat(order.filter(i => i !== nextIdx));
+        }
+        order.forEach(idx => {
+            const item = items[idx], info = infos[idx];
             if (!info) {
+                const isNext = idx === nextIdx;
                 list.innerHTML += `
-                <div class="test-card">
+                <div class="test-card" ${isNext ? 'style="border:2px solid #00c6e6; background:#f0fcff;"' : ''}>
                     <div>
+                        ${isNext ? '<span class="tag" style="background:#00a5bd; display:inline-block; font-size:0.65rem; font-weight:700; padding:2px 7px; border-radius:4px; color:#fff; margin-bottom:5px;">👉 পরবর্তী টেস্ট</span>' : ''}
                         <div class="card-title">${item.chapter}</div>
                         <div style="font-size:0.8rem; color:#666;">${item.subject}</div>
                     </div>
