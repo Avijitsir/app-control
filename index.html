@@ -328,14 +328,23 @@
 
     // --- পরীক্ষা থেকে ফিরলে ঠিক যে মেনু থেকে শুরু করেছিলেন সেখানেই ফেরা ---
     document.getElementById('listContainer').addEventListener('click', function (e) {
-        if (!e.target.closest('a.start-btn')) return;
-        try { localStorage.setItem('portal_return', JSON.stringify({ cat: currentExam, tab: currentTopTab, menu: currentMenu, sub: currentSub, t: Date.now() })); } catch (err) {}
+        const a = e.target.closest('a.start-btn'); if (!a) return;
+        const st = { cat: currentExam, tab: currentTopTab, menu: currentMenu, sub: currentSub, t: Date.now() };
+        try { localStorage.setItem('portal_return', JSON.stringify(st)); } catch (err) {}
+        // ফেরার ঠিকানা লিংকের সঙ্গেই পাঠানো হয়, ফোনের স্টোরেজ আলাদা হলেও যাতে কাজ করে
+        try {
+            const back = location.origin + location.pathname + '#r=' + encodeURIComponent(JSON.stringify(st));
+            const u = new URL(a.getAttribute('href'), location.href);
+            u.searchParams.set('back', back);
+            a.href = u.toString();
+        } catch (err) {}
     });
     let navRestored = false;
     function restoreNav() {
         if (navRestored) return; navRestored = true;
         let r = null;
-        try { r = JSON.parse(localStorage.getItem('portal_return') || 'null'); localStorage.removeItem('portal_return'); } catch (e) {}
+        try { const m = location.hash.match(/^#r=(.+)$/); if (m) { r = JSON.parse(decodeURIComponent(m[1])); history.replaceState(null, '', location.pathname + location.search); } } catch (e) {}
+        try { const ls = JSON.parse(localStorage.getItem('portal_return') || 'null'); localStorage.removeItem('portal_return'); if (!r) r = ls; } catch (e) {}
         if (!r || !r.cat || Date.now() - r.t > 12 * 3600 * 1000) return;
         const items = allData.filter(d => d.category === r.cat);
         if (!items.length || items.some(i => i.locked === true)) return;
