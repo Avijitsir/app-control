@@ -78,6 +78,21 @@
         .list { overflow-y: auto; flex-grow: 1; padding: 15px 20px 80px 20px; overscroll-behavior: contain; }
         .test-card { background: white; padding: 15px; border-radius: 10px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.03); }
         .card-title { font-weight: 700; font-size: 0.95rem; }
+        /* টেস্টবুক-স্টাইল কার্ড: দেওয়া পরীক্ষায় স্কোর অনুযায়ী রঙ ভরা, নিচে রঙিন রেখা */
+        .tc2 { position: relative; overflow: hidden; background: #fff; border-radius: 10px; margin-bottom: 12px; box-shadow: 0 2px 6px rgba(0,0,0,0.06); }
+        .tc2 .tint { position: absolute; left: 0; top: 0; bottom: 0; }
+        .tc2 .body { position: relative; padding: 14px 14px 10px; display: flex; gap: 10px; align-items: center; justify-content: space-between; }
+        .tc2 .info { min-width: 0; flex: 1; }
+        .tc2 .meta { font-size: 0.76rem; color: #6b7280; margin-top: 6px; }
+        .tc2 .acts { display: flex; gap: 8px; flex: none; }
+        .tc2 .abtn { border: 1px solid #00bcd4; color: #00a5bd; background: #fff; border-radius: 6px; padding: 7px 12px; font-size: 0.8rem; font-weight: 600; text-decoration: none; }
+        .tc2 .abtn.fill { background: #00c6e6; color: #fff; border-color: #00c6e6; padding: 10px 18px; }
+        .tc2 .bar { position: relative; height: 4px; background: #e5e7eb; }
+        .tc2 .bar .fillbar { position: absolute; left: 0; top: 0; bottom: 0; }
+        .tc2 .bar .pm { position: absolute; top: -2px; width: 3px; height: 8px; background: #fbbf24; }
+        .tc2 .foot { position: relative; background: #f3f4f6; padding: 7px 14px; font-size: 0.75rem; color: #6b7280; display: flex; justify-content: space-between; align-items: center; }
+        .tc2 .foot a { color: #00a5bd; text-decoration: none; font-weight: 600; }
+        .tc2 .tag { display: inline-block; font-size: 0.65rem; font-weight: 700; padding: 2px 7px; border-radius: 4px; color: #fff; margin-bottom: 5px; }
         .start-btn { background: var(--primary); color: white; border: none; padding: 8px 15px; border-radius: 5px; font-weight: bold; cursor: pointer; text-decoration: none; font-size: 0.85rem; }
     
         /* লোডিং: লেখার বদলে রঙিন ঝিকমিক বাক্স */
@@ -306,40 +321,88 @@
         renderList(filtered);
     }
 
-    // এই ফোনে এই কুইজের সেভ করা অবস্থা: 'done' (ফল দেখা যাবে) / 'run' (চলছিল) / ''
-    function attemptStatus(link) {
+    // এই ফোনে এই কুইজের সেভ করা অবস্থা: null / {state:'run',...} / {state:'done',...}
+    function attemptInfo(link) {
         try {
             const id = new URL(link, location.href).searchParams.get('id');
-            if (!id) return '';
+            if (!id) return null;
             const st = JSON.parse(localStorage.getItem('exam_state_' + id) || 'null');
-            if (!st || !st.savedAt || Date.now() - st.savedAt > 24 * 3600 * 1000) return '';
-            return st.submitted ? 'done' : 'run';
-        } catch (e) { return ''; }
+            if (!st || !st.savedAt || Date.now() - st.savedAt > 24 * 3600 * 1000 || !st.questions) return null;
+            const qs = st.settings || st.quizSettings || {};
+            const pos = Number(qs.posMark) || 1, neg = Number(qs.negMark) || 0, pass = Number(qs.passMark) || 0;
+            const n = st.questions.length, total = +(n * pos).toFixed(2);
+            if (st.submitted) {
+                let c = 0, w = 0;
+                st.questions.forEach((q, i) => { const u = st.userAnswers[i]; if (u === null || u === undefined) return; if (u == Number(q.correctIndex)) c++; else w++; });
+                const score = +(c * pos - w * neg).toFixed(2);
+                return { state: 'done', score, total, pass, c, w, date: new Date(st.savedAt) };
+            }
+            const left = st.isPaused ? (st.timeLeft || 0) : Math.max(0, Math.round((st.endTime - Date.now()) / 1000));
+            return { state: 'run', n, total, mins: Math.ceil(left / 60) };
+        } catch (e) { return null; }
+    }
+    // লিংকের সঙ্গে ছোট নির্দেশ জোড়া (যেমন view=solution, retake=1)
+    function linkWith(link, params) {
+        try { const u = new URL(link, location.href); Object.keys(params || {}).forEach(k => u.searchParams.set(k, params[k])); return u.toString(); }
+        catch (e) { return link; }
     }
 
     function renderList(items) {
         const list = document.getElementById('listContainer');
         list.innerHTML = "";
         items.forEach(item => {
-            const st = attemptStatus(item.link);
-            let btn = `<a href="${item.link}" class="start-btn">Start</a>`;
-            if (st === 'done') btn = `<a href="${item.link}" class="start-btn" style="background:#00a86b;">📊 ফলাফল</a>`;
-            else if (st === 'run') btn = `<a href="${item.link}" class="start-btn" style="background:#f59e0b;">▶ চালিয়ে যান</a>`;
-            list.innerHTML += `
+            const info = attemptInfo(item.link);
+            if (!info) {
+                list.innerHTML += `
                 <div class="test-card">
                     <div>
                         <div class="card-title">${item.chapter}</div>
                         <div style="font-size:0.8rem; color:#666;">${item.subject}</div>
                     </div>
-                    ${btn}
-                </div>
-            `;
+                    <a href="${item.link}" data-exam="1" class="start-btn">Start</a>
+                </div>`;
+            } else if (info.state === 'run') {
+                list.innerHTML += `
+                <div class="tc2">
+                    <div class="body">
+                        <div class="info">
+                            <div class="card-title">${item.chapter}</div>
+                            <div class="meta">❓ ${info.n} প্রশ্ন &nbsp;•&nbsp; 🎯 ${info.total} নম্বর &nbsp;•&nbsp; ⏱ ${info.mins} মিনিট বাকি</div>
+                        </div>
+                        <div class="acts"><a href="${item.link}" data-exam="1" class="abtn fill">Resume Now</a></div>
+                    </div>
+                    <div class="foot"><span>${item.subject}</span><span style="color:#f59e0b; font-weight:600;">অসমাপ্ত</span></div>
+                </div>`;
+            } else {
+                const ok = info.score >= info.pass;
+                const col = ok ? '#22c55e' : '#ef4444', tint = ok ? '#e8f8ee' : '#fde8ea';
+                const pct = info.total > 0 ? Math.max(0, Math.min(100, info.score / info.total * 100)) : 0;
+                const pm = info.total > 0 ? Math.max(0, Math.min(100, info.pass / info.total * 100)) : 0;
+                const dt = info.date.toLocaleDateString('bn-IN', { day: 'numeric', month: 'short' });
+                list.innerHTML += `
+                <div class="tc2">
+                    <div class="tint" style="width:${pct}%; background:${tint};"></div>
+                    <div class="body">
+                        <div class="info">
+                            <span class="tag" style="background:${col};">${ok ? 'PASSED' : 'FAILED'}</span>
+                            <div class="card-title">${item.chapter}</div>
+                            <div class="meta">📄 ${info.score}/${info.total} নম্বর &nbsp;•&nbsp; ✅ ${info.c} &nbsp; ❌ ${info.w}</div>
+                        </div>
+                        <div class="acts">
+                            <a href="${linkWith(item.link, { view: 'solution' })}" data-exam="1" class="abtn">Solution</a>
+                            <a href="${item.link}" data-exam="1" class="abtn">Analysis</a>
+                        </div>
+                    </div>
+                    <div class="bar"><div class="fillbar" style="width:${pct}%; background:${col};"></div><div class="pm" style="left:${pm}%;"></div></div>
+                    <div class="foot"><span>${item.subject} &nbsp;•&nbsp; দিয়েছেন: ${dt}</span><a href="${linkWith(item.link, { retake: '1' })}" data-exam="1">↻ Reattempt</a></div>
+                </div>`;
+            }
         });
     }
 
     // --- পরীক্ষা থেকে ফিরলে ঠিক যে মেনু থেকে শুরু করেছিলেন সেখানেই ফেরা ---
     document.getElementById('listContainer').addEventListener('click', function (e) {
-        const a = e.target.closest('a.start-btn'); if (!a) return;
+        const a = e.target.closest('a[data-exam]'); if (!a) return;
         const st = { cat: currentExam, tab: currentTopTab, menu: currentMenu, sub: currentSub, t: Date.now() };
         try { localStorage.setItem('portal_return', JSON.stringify(st)); } catch (err) {}
         // ফেরার ঠিকানা লিংকের সঙ্গেই পাঠানো হয়, ফোনের স্টোরেজ আলাদা হলেও যাতে কাজ করে
