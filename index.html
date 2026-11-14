@@ -92,6 +92,9 @@
         .tc2 .bar .pm { position: absolute; top: -2px; width: 3px; height: 8px; background: #fbbf24; }
         .tc2 .foot { position: relative; background: #f3f4f6; padding: 7px 14px; font-size: 0.75rem; color: #6b7280; display: flex; justify-content: space-between; align-items: center; }
         .tc2 .foot a { color: #00a5bd; text-decoration: none; font-weight: 600; }
+        .pills { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 7px; }
+        .pill { font-size: 0.72rem; font-weight: 600; padding: 3px 9px; border-radius: 12px; }
+        .pill.q { background: #ede9fe; color: #6d28d9; } .pill.m { background: #dcfce7; color: #15803d; } .pill.t { background: #ffedd5; color: #c2410c; }
         .tc2 .tag { display: inline-block; font-size: 0.65rem; font-weight: 700; padding: 2px 7px; border-radius: 4px; color: #fff; margin-bottom: 5px; }
         .start-btn { background: var(--primary); color: white; border: none; padding: 8px 15px; border-radius: 5px; font-weight: bold; cursor: pointer; text-decoration: none; font-size: 0.85rem; }
     
@@ -358,6 +361,16 @@
         catch (e) { return link; }
     }
 
+    // কার্ডের ছোট রঙিন তথ্য: প্রশ্ন, নম্বর, সময় (অ্যাডমিন থেকে তথ্য এলে)
+    function pillsOf(it) {
+        if (it.qCount === undefined && it.marks === undefined && it.mins === undefined) return '';
+        let h = '<div class="pills">';
+        if (it.qCount) h += `<span class="pill q">❓ ${it.qCount} প্রশ্ন</span>`;
+        if (it.marks) h += `<span class="pill m">🎯 ${it.marks} নম্বর</span>`;
+        if (it.mins) h += `<span class="pill t">⏱ ${it.mins} মিনিট</span>`;
+        return h + '</div>';
+    }
+
     function renderList(items) {
         const list = document.getElementById('listContainer');
         list.innerHTML = "";
@@ -386,7 +399,7 @@
                     <div>
                         ${isNext ? '<span class="tag" style="background:#00a5bd; display:inline-block; font-size:0.65rem; font-weight:700; padding:2px 7px; border-radius:4px; color:#fff; margin-bottom:5px;">👉 পরবর্তী টেস্ট</span>' : ''}
                         <div class="card-title">${item.chapter}</div>
-                        <div style="font-size:0.8rem; color:#666;">${item.subject}</div>
+                        ${pillsOf(item)}
                     </div>
                     <a href="${item.link}" data-exam="1" class="start-btn">Start</a>
                 </div>`;
@@ -400,7 +413,7 @@
                         </div>
                         <div class="acts"><a href="${item.link}" data-exam="1" class="abtn fill">Resume Now</a></div>
                     </div>
-                    <div class="foot"><span>${item.subject}</span><span style="color:#f59e0b; font-weight:600;">অসমাপ্ত</span></div>
+                    <div class="foot"><span></span><span style="color:#f59e0b; font-weight:600;">অসমাপ্ত</span></div>
                 </div>`;
             } else {
                 const ok = info.score >= info.pass;
@@ -415,7 +428,7 @@
                         <div class="info">
                             <span class="tag" style="background:${col};">${ok ? 'PASSED' : 'FAILED'}</span>
                             <div class="card-title">${item.chapter}</div>
-                            <div class="meta">📄 ${info.score}/${info.total} নম্বর &nbsp;•&nbsp; ✅ ${info.c} &nbsp; ❌ ${info.w}</div>
+                            <div class="meta">📄 ${info.score}/${info.total} নম্বর &nbsp;•&nbsp; ✅ ${info.c} &nbsp; ❌ ${info.w}${item.mins ? ' &nbsp;•&nbsp; ⏱ ' + item.mins + ' মিনিট' : ''}</div>
                         </div>
                         <div class="acts">
                             <a href="${linkWith(item.link, { view: 'solution' })}" data-exam="1" class="abtn">Solution</a>
@@ -423,7 +436,7 @@
                         </div>
                     </div>
                     <div class="bar"><div class="fillbar" style="width:${pct}%; background:${col};"></div><div class="pm" style="left:${pm}%;"></div></div>
-                    <div class="foot"><span>${item.subject} &nbsp;•&nbsp; দিয়েছেন: ${dt}</span><a href="${linkWith(item.link, { retake: '1' })}" data-exam="1">↻ Reattempt</a></div>
+                    <div class="foot"><span>দিয়েছেন: ${dt}</span><a href="${linkWith(item.link, { retake: '1' })}" data-exam="1">↻ Reattempt</a></div>
                 </div>`;
             }
         });
