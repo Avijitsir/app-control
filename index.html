@@ -148,6 +148,9 @@
         .chip { border-radius: 16px; }
         .livecnt { display: inline-block; background: #ede9fe; color: #6d28d9; font-size: 0.7rem; font-weight: 700; padding: 1px 8px; border-radius: 10px; margin-left: 6px; }
         .livecnt:empty { display: none; }
+        .chromehint { margin-top: 7px; font-size: 0.72rem; color: #1e3a8a; background: #eff6ff; border-radius: 8px; padding: 6px 8px; line-height: 1.5; }
+        .chromehint a, .chromehint button { display: inline-block; margin: 4px 4px 0 0; font-size: 0.72rem; font-weight: 700; border-radius: 12px; padding: 4px 10px; text-decoration: none; border: 1px solid #2563eb; background: #2563eb; color: #fff; cursor: pointer; }
+        .chromehint button { background: #fff; color: #2563eb; }
         .sk-box { height: 110px; border-radius: 16px; background: linear-gradient(110deg, #e0e7ff 8%, #fce7f3 28%, #dcfce7 48%, #fef3c7 68%, #e0e7ff 88%); background-size: 300% 100%; animation: skShimmer 1.6s ease-in-out infinite; }
         .sk-box:nth-child(2n) { animation-delay: .2s; } .sk-box:nth-child(3n) { animation-delay: .4s; }
         @keyframes skShimmer { 0% { background-position: 100% 0; } 100% { background-position: -100% 0; } }
@@ -587,6 +590,24 @@
             const g = bx.querySelector('.gridlive'); if (g) g.style.display = on ? 'inline-block' : 'none';
         });
     }
+    // লাইভ টেস্টে Google লগইন লাগে; অ্যাপ/শর্টকাটের ভেতরে লগইন চলে না, তাই Chrome-এ দিতে বলা
+    function appLike() {
+        const ua = navigator.userAgent || '';
+        try { if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true) return true; } catch (e) {}
+        return /; wv\)/.test(ua) || (/Android/.test(ua) && /Version\/\d+\.\d+/.test(ua) && /Chrome\//.test(ua));
+    }
+    function absLink(l) { try { return new URL(l, location.href).href; } catch (e) { return l; } }
+    function chromeHint(link) {
+        const u = absLink(link);
+        let h = '<div class="chromehint">🔐 লাইভ টেস্টে Google লগইন লাগে। <b>Chrome ব্রাউজারে</b> দিলে ভালো চলে।';
+        if (appLike()) h += '<br><a href="intent://' + u.replace(/^https?:\/\//, '') + '#Intent;scheme=https;package=com.android.chrome;end">🌐 Chrome-এ খুলুন</a><button type="button" onclick="copyLinkFor(\'' + u.replace(/'/g, '%27') + '\')">📋 লিংক কপি</button>';
+        return h + '</div>';
+    }
+    function copyLinkFor(u) {
+        const done = () => alert('লিংক কপি হয়েছে। Chrome খুলে ঠিকানার ঘরে পেস্ট করে খুলুন।');
+        try { navigator.clipboard.writeText(u).then(done, () => prompt('এই লিংক কপি করে Chrome-এ খুলুন:', u)); } catch (e) { prompt('এই লিংক কপি করে Chrome-এ খুলুন:', u); }
+    }
+
     // লাইভ টেস্টে কতজন দিয়েছে
     let liveCounts = {};
     function qidOf(link) { try { return new URL(link, location.href).searchParams.get('id') || ''; } catch (e) { return ''; } }
