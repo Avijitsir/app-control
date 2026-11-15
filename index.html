@@ -144,6 +144,8 @@
         .pill-btn.active { box-shadow: 0 4px 10px rgba(67,97,238,.3); }
         .tab-link.active { font-weight: 800; }
         .chip { border-radius: 16px; }
+        .livecnt { display: inline-block; background: #ede9fe; color: #6d28d9; font-size: 0.7rem; font-weight: 700; padding: 1px 8px; border-radius: 10px; margin-left: 6px; }
+        .livecnt:empty { display: none; }
         .sk-box { height: 110px; border-radius: 16px; background: linear-gradient(110deg, #e0e7ff 8%, #fce7f3 28%, #dcfce7 48%, #fef3c7 68%, #e0e7ff 88%); background-size: 300% 100%; animation: skShimmer 1.6s ease-in-out infinite; }
         .sk-box:nth-child(2n) { animation-delay: .2s; } .sk-box:nth-child(3n) { animation-delay: .4s; }
         @keyframes skShimmer { 0% { background-position: 100% 0; } 100% { background-position: -100% 0; } }
@@ -571,8 +573,15 @@
             const g = bx.querySelector('.gridlive'); if (g) g.style.display = on ? 'inline-block' : 'none';
         });
     }
+    // লাইভ টেস্টে কতজন দিয়েছে
+    let liveCounts = {};
+    function qidOf(link) { try { return new URL(link, location.href).searchParams.get('id') || ''; } catch (e) { return ''; } }
+    function refreshLiveCounts() {
+        document.querySelectorAll('.livecnt').forEach(sp => { const n = Number(liveCounts[sp.dataset.q]) || 0; sp.textContent = n ? '👥 ' + n + ' জন দিয়েছে' : ''; });
+    }
+    try { db.ref('liveCount').on('value', s => { liveCounts = s.val() || {}; refreshLiveCounts(); }); } catch (e) {}
     function tickLive() {
-        refreshGridLive();
+        refreshGridLive(); refreshLiveCounts();
         let edge = false;
         document.querySelectorAll('[data-cd]').forEach(sp => {
             const r = Math.ceil((Number(sp.dataset.cd) - nowS()) / 1000);
@@ -612,7 +621,7 @@
         const liveTag = '<span class="tag live" style="display:inline-block;">● LIVE TEST</span>';
         order.forEach(idx => {
             const item = items[idx], info = infos[idx], L = ls[idx];
-            const endLine = L === 'live' ? `<div class="liveline">⏱ লাইভ শেষ: ${fmtDT(Number(item.liveEnd))} • আর <span data-cd="${Number(item.liveEnd)}"></span></div>` : '';
+            const endLine = L === 'live' ? `<div class="liveline">⏱ লাইভ শেষ: ${fmtDT(Number(item.liveEnd))} • আর <span data-cd="${Number(item.liveEnd)}"></span><span class="livecnt" data-q="${qidOf(item.link)}"></span></div>` : '';
             if (!info) {
                 const isNext = idx === nextIdx;
                 if (L === 'upcoming') {
