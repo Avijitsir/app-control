@@ -141,6 +141,9 @@
         .hero-stat span { font-size: 0.66rem; opacity: .92; font-weight: 600; }
         .hero-bar { height: 6px; border-radius: 6px; background: rgba(255,255,255,.28); margin-top: 11px; overflow: hidden; position: relative; z-index: 1; }
         .hero-bar i { display: block; height: 100%; border-radius: 6px; background: #fde047; transition: width .5s; }
+        /* উপরের অংশ (হেডার, ব্যানার, ট্যাব, মেনু, চিপ) কখনো চেপে ছোট হবে না; জায়গা কম পড়লে শুধু টেস্টের তালিকা স্ক্রল করবে */
+        .sheet > * { flex-shrink: 0; }
+        .sheet > .list { flex-shrink: 1; flex-basis: 0; min-height: 0; }
         .top-tabs { overflow-x: auto; scrollbar-width: none; }
         .pill-btn { white-space: nowrap; background: #f8fafc; transition: all .2s; }
         .pill-btn.active { box-shadow: 0 4px 10px rgba(67,97,238,.3); }
